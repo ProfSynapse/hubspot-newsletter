@@ -49,12 +49,7 @@ router.post('/curate-articles', async (req: Request, res: Response) => {
 
     console.log(`Curating articles for query: ${query}`);
     
-    let articles = await searchArticles(query);
-    
-    if (articles.length < 5) {
-      const recentArticles = await getRecentArticles(24);
-      articles = [...articles, ...recentArticles].slice(0, 100);
-    }
+    const articles = await getRecentArticles(48); // Get last 48 hours, no keyword filtering - let AI decide relevance
     
     if (articles.length === 0) {
       return res.status(404).json({ 
@@ -176,9 +171,17 @@ router.post('/generate', async (req: Request, res: Response) => {
     
     let articles = await searchArticles(query);
     
-    if (articles.length < 5) {
-      const recentArticles = await getRecentArticles(24);
-      articles = [...articles, ...recentArticles].slice(0, 100);
+    // If search results are insufficient, supplement with recent articles
+    if (articles.length < 50) {
+      console.log(`Search returned ${articles.length} articles, supplementing with recent articles`);
+      const recentArticles = await getRecentArticles(48); // Match search timeframe
+      
+      // Merge arrays, removing duplicates by URL
+      const seenUrls = new Set(articles.map(a => a.url));
+      const uniqueRecentArticles = recentArticles.filter(a => !seenUrls.has(a.url));
+      
+      articles = [...articles, ...uniqueRecentArticles].slice(0, 200); // Increase limit for AI curation
+      console.log(`Total articles after supplementing: ${articles.length}`);
     }
     
     if (articles.length === 0) {

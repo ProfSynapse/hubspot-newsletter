@@ -109,6 +109,14 @@ describe('API Routes', () => {
       expect(response.body).toHaveProperty('totalArticlesConsidered');
       expect(Array.isArray(response.body.articles)).toBe(true);
       
+      // Log the article counts to verify our changes
+      console.log(`Total articles considered: ${response.body.totalArticlesConsidered}`);
+      console.log(`Final curated articles: ${response.body.articleCount}`);
+      
+      // Should now consider more articles since we removed keyword filtering
+      // With our test data, we should see at least the test articles we inserted
+      expect(response.body.totalArticlesConsidered).toBeGreaterThanOrEqual(4);
+      
       if (response.body.articles.length > 0) {
         const article = response.body.articles[0];
         expect(article).toHaveProperty('id');

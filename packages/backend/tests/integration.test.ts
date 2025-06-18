@@ -1,4 +1,4 @@
-import { initializeDatabase, insertArticle, searchArticles } from '../common/database/postgres';
+import { initializeDatabase, insertArticle, getRecentArticles } from '../common/database/postgres';
 import { parseAllFeeds } from '../common/scrapers/rss-parser';
 import { generateNewsletter } from '../ai/newsletter-generator';
 import request from 'supertest';
@@ -72,14 +72,14 @@ describe('Integration Tests', () => {
     
     expect(stored).toBeGreaterThan(0);
     
-    // Step 3: Search for relevant articles
-    console.log('Searching articles...');
-    const searchResults = await searchArticles('tech');
-    expect(Array.isArray(searchResults)).toBe(true);
+    // Step 3: Get recent articles (no keyword search, like our new API)
+    console.log('Getting recent articles...');
+    const recentResults = await getRecentArticles(24);
+    expect(Array.isArray(recentResults)).toBe(true);
     
-    // Step 4: Generate newsletter (test with or without search results)
+    // Step 4: Generate newsletter (test with recent articles)
     console.log('Generating newsletter...');
-    const articlesToUse = searchResults.length > 0 ? searchResults.slice(0, 3) : articles.slice(0, 2);
+    const articlesToUse = recentResults.length > 0 ? recentResults.slice(0, 3) : articles.slice(0, 2);
     const newsletter = await generateNewsletter('technology trends', articlesToUse);
     
     expect(newsletter).toHaveProperty('subject');
@@ -136,8 +136,9 @@ describe('Integration Tests', () => {
   }, 60000);
 
   test('should handle empty article database gracefully', async () => {
-    const emptyResults = await searchArticles('nonexistent12345');
-    expect(emptyResults.length).toBe(0);
+    // Test getting recent articles when database might be empty
+    const recentResults = await getRecentArticles(1); // Last 1 hour to minimize results
+    expect(Array.isArray(recentResults)).toBe(true);
     
     // Should still generate a fallback newsletter
     const newsletter = await generateNewsletter('test query', []);

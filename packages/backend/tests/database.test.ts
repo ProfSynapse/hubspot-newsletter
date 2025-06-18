@@ -46,13 +46,13 @@ describe('Database Functions', () => {
     expect(articles[0]).toHaveProperty('url');
   });
 
-  test('should search articles by query', async () => {
+  test('should search articles by query (legacy function)', async () => {
     const results = await searchArticles('Test');
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('should return empty array for non-matching search', async () => {
+  test('should return empty array for non-matching search (legacy function)', async () => {
     const results = await searchArticles('NonExistentQuery12345');
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBe(0);

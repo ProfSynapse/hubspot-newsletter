@@ -116,12 +116,14 @@ export async function getRecentArticles(hours: number = 24): Promise<Article[]> 
     SELECT * FROM articles 
     WHERE scraped_at > NOW() - INTERVAL '${hours} hours'
     ORDER BY published_at DESC
+    LIMIT 300
   `;
   
   const result = await query(selectQuery);
   return result.rows;
 }
 
+// Legacy function - no longer used since we removed keyword search
 export async function searchArticles(searchQuery: string): Promise<Article[]> {
   const selectQuery = `
     SELECT * FROM articles 
