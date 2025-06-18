@@ -39,5 +39,5 @@ Thumbs.db
 .claude/
 CLAUDE.md
 coverage/
-database/
+test-newsletter.db
 RAILWAY_DEPLOYMENT.md
