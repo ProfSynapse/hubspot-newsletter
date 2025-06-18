@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Article } from '../common/database/postgres';
 import { parseJsonWithFallback } from '../utils/json-parser';
+import { retryAIGeneration } from '../utils/retry';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -91,8 +92,12 @@ STRUCTURE:
 3. OPTIONAL: Include a featured image using ONLY one of the provided image URLs from the articles (do not create or infer URLs)
 4. 3-4 themed sections with headings that explore different angles
 5. Mix paragraphs and bullet points naturally - flexible ordering
-6. Hyperlink key phrases to source articles naturally in text
+6. REQUIRED: Each section MUST have at least one hyperlink to source articles
 7. Actionable business advice that's specific and practical
+
+IMPORTANT: 
+- All fields should contain plain text only. Do not use markdown formatting (no asterisks, underscores, etc.) in captions or any other fields.
+- Every section MUST include at least one hyperlink - this is required for proper citation.
 
 CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text.
 
@@ -107,7 +112,7 @@ Generate a JSON response with this structure:
   "thematicIntro": "Theme-setting introduction with no heading",
   "featuredImage": {
     "url": "https://example.com/image.jpg",
-    "caption": "Descriptive caption for the image",
+    "caption": "Descriptive caption for the image (plain text, no markdown formatting)",
     "source": "Source article title or publication"
   },
   "sections": [
@@ -185,178 +190,201 @@ Example 1 - Smart Glasses Theme:
 }`;
 }
 
+// Validation function to ensure newsletter has required hyperlinks
+function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
+  // Check that every section has at least one hyperlink
+  return newsletter.sections.every(section => 
+    section.hyperlinks && section.hyperlinks.length > 0
+  );
+}
+
 export async function generateNewsletter(userQuery: string, articles: Article[]): Promise<GeneratedNewsletter> {
   try {
     const prompt = createNewsletterPrompt(articles);
     
-    const response = await axios.post(
-      OPENROUTER_API_URL,
-      {
-        model: MODEL,
-        messages: [
+    // Use retry logic for more reliable generation
+    return await retryAIGeneration(
+      async () => {
+        const response = await axios.post(
+          OPENROUTER_API_URL,
           {
-            role: 'system',
-            content: prompt
-          },
-          {
-            role: 'user',
-            content: userQuery
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 8192,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'newsletter_response',
-            strict: true,
-            schema: {
-              type: 'object',
-              properties: {
-                subject: {
-                  type: 'string',
-                  description: 'Newsletter subject line'
-                },
-                theming: {
+            model: MODEL,
+            messages: [
+              {
+                role: 'system',
+                content: prompt
+              },
+              {
+                role: 'user',
+                content: userQuery
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 8192,
+            response_format: {
+              type: 'json_schema',
+              json_schema: {
+                name: 'newsletter_response',
+                strict: true,
+                schema: {
                   type: 'object',
-                  description: 'Thematic strategy for the newsletter',
                   properties: {
-                    overallTheme: {
+                    subject: {
                       type: 'string',
-                      description: 'The big picture story connecting all articles'
+                      description: 'Newsletter subject line'
                     },
-                    strategy: {
-                      type: 'string',
-                      description: 'How articles will be connected thematically'
-                    },
-                    angle: {
-                      type: 'string',
-                      description: 'Perspective or tone (skeptical, optimistic, etc.)'
-                    }
-                  },
-                  required: ['overallTheme', 'strategy', 'angle'],
-                  additionalProperties: false
-                },
-                thematicIntro: {
-                  type: 'string',
-                  description: 'Theme-setting introduction with no heading'
-                },
-                featuredImage: {
-                  type: 'object',
-                  description: 'Optional featured image from one of the articles',
-                  properties: {
-                    url: {
-                      type: 'string',
-                      description: 'Direct URL to the image'
-                    },
-                    caption: {
-                      type: 'string',
-                      description: 'Descriptive caption for the image'
-                    },
-                    source: {
-                      type: 'string',
-                      description: 'Source article title or publication name'
-                    }
-                  },
-                  required: ['url', 'caption', 'source'],
-                  additionalProperties: false
-                },
-                sections: {
-                  type: 'array',
-                  description: 'Array of newsletter sections',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      heading: {
-                        type: 'string',
-                        description: 'Section heading (often a question)'
+                    theming: {
+                      type: 'object',
+                      description: 'Thematic strategy for the newsletter',
+                      properties: {
+                        overallTheme: {
+                          type: 'string',
+                          description: 'The big picture story connecting all articles'
+                        },
+                        strategy: {
+                          type: 'string',
+                          description: 'How articles will be connected thematically'
+                        },
+                        angle: {
+                          type: 'string',
+                          description: 'Perspective or tone (skeptical, optimistic, etc.)'
+                        }
                       },
-                      contentBlocks: {
-                        type: 'array',
-                        description: 'Array of content blocks (paragraphs and bullet lists)',
-                        items: {
-                          type: 'object',
-                          properties: {
-                            type: {
-                              type: 'string',
-                              enum: ['paragraph', 'bulletList'],
-                              description: 'Type of content block'
-                            },
-                            content: {
-                              type: 'string',
-                              description: 'Paragraph content (for paragraph type)'
-                            },
+                      required: ['overallTheme', 'strategy', 'angle'],
+                      additionalProperties: false
+                    },
+                    thematicIntro: {
+                      type: 'string',
+                      description: 'Theme-setting introduction with no heading'
+                    },
+                    featuredImage: {
+                      type: 'object',
+                      description: 'Optional featured image from one of the articles',
+                      properties: {
+                        url: {
+                          type: 'string',
+                          description: 'Direct URL to the image'
+                        },
+                        caption: {
+                          type: 'string',
+                          description: 'Descriptive caption for the image - plain text only, no markdown formatting like asterisks or underscores'
+                        },
+                        source: {
+                          type: 'string',
+                          description: 'Source article title or publication name'
+                        }
+                      },
+                      required: ['url', 'caption', 'source'],
+                      additionalProperties: false
+                    },
+                    sections: {
+                      type: 'array',
+                      description: 'Array of newsletter sections',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          heading: {
+                            type: 'string',
+                            description: 'Section heading (often a question)'
+                          },
+                          contentBlocks: {
+                            type: 'array',
+                            description: 'Array of content blocks (paragraphs and bullet lists)',
                             items: {
-                              type: 'array',
-                              description: 'Array of bullet point items (for bulletList type)',
-                              items: {
-                                type: 'string'
-                              }
+                              type: 'object',
+                              properties: {
+                                type: {
+                                  type: 'string',
+                                  enum: ['paragraph', 'bulletList'],
+                                  description: 'Type of content block'
+                                },
+                                content: {
+                                  type: 'string',
+                                  description: 'Paragraph content (for paragraph type)'
+                                },
+                                items: {
+                                  type: 'array',
+                                  description: 'Array of bullet point items (for bulletList type)',
+                                  items: {
+                                    type: 'string'
+                                  }
+                                }
+                              },
+                              required: ['type'],
+                              additionalProperties: false
                             }
                           },
-                          required: ['type'],
-                          additionalProperties: false
-                        }
-                      },
-                      hyperlinks: {
-                        type: 'array',
-                        description: 'Array of hyperlinks for this section',
-                        items: {
-                          type: 'object',
-                          properties: {
-                            linkText: {
-                              type: 'string',
-                              description: 'Exact text to hyperlink'
-                            },
-                            url: {
-                              type: 'string',
-                              description: 'Source article URL'
+                          hyperlinks: {
+                            type: 'array',
+                            description: 'Array of hyperlinks for this section',
+                            minItems: 1,
+                            items: {
+                              type: 'object',
+                              properties: {
+                                linkText: {
+                                  type: 'string',
+                                  description: 'Exact text to hyperlink'
+                                },
+                                url: {
+                                  type: 'string',
+                                  description: 'Source article URL'
+                                }
+                              },
+                              required: ['linkText', 'url'],
+                              additionalProperties: false
                             }
-                          },
-                          required: ['linkText', 'url'],
-                          additionalProperties: false
-                        }
+                          }
+                        },
+                        required: ['heading', 'contentBlocks', 'hyperlinks'],
+                        additionalProperties: false
                       }
                     },
-                    required: ['heading', 'contentBlocks', 'hyperlinks'],
-                    additionalProperties: false
-                  }
-                },
-                actionableAdvice: {
-                  type: 'string',
-                  description: 'Specific actionable advice (no "Your move:" prefix needed)'
-                },
-                signoff: {
-                  type: 'string',
-                  description: 'Newsletter closing/signoff'
+                    actionableAdvice: {
+                      type: 'string',
+                      description: 'Specific actionable advice (no "Your move:" prefix needed)'
+                    },
+                    signoff: {
+                      type: 'string',
+                      description: 'Newsletter closing/signoff'
+                    }
+                  },
+                  required: ['subject', 'theming', 'thematicIntro', 'sections', 'actionableAdvice', 'signoff'],
+                  additionalProperties: false
                 }
-              },
-              required: ['subject', 'theming', 'thematicIntro', 'sections', 'actionableAdvice', 'signoff'],
-              additionalProperties: false
+              }
+            }
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://hubspot-newsletter.railway.app',
+              'X-Title': 'HubSpot Newsletter Bot'
             }
           }
+        );
+
+        const content = response.data.choices[0].message.content;
+        const parseResult = parseJsonWithFallback<GeneratedNewsletter>(content);
+        
+        if (parseResult.success) {
+          return parseResult.data!;
+        } else {
+          console.warn('Failed to parse AI response as JSON:', parseResult.error);
+          console.warn('Original content:', parseResult.originalText);
+          throw new Error(`JSON parsing failed: ${parseResult.error}`);
         }
       },
+      validateNewsletter,
       {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://hubspot-newsletter.railway.app',
-          'X-Title': 'HubSpot Newsletter Bot'
+        maxAttempts: 3,
+        delayMs: 2000,
+        onRetry: (error, attempt) => {
+          console.warn(`Newsletter generation attempt ${attempt} failed:`, error.message);
+          console.log(`Retrying in a moment...`);
         }
       }
     );
-
-    const content = response.data.choices[0].message.content;
-    const parseResult = parseJsonWithFallback<GeneratedNewsletter>(content);
-    
-    if (parseResult.success) {
-      return parseResult.data!;
-    } else {
-      console.warn('Failed to parse AI response as JSON:', parseResult.error);
-      console.warn('Original content:', parseResult.originalText);
-      throw new Error(`JSON parsing failed: ${parseResult.error}`);
-    }
   } catch (error) {
     console.error('Error generating newsletter:', error);
     
@@ -374,7 +402,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         heading: article.title,
         contentBlocks: [
           {
-            type: 'paragraph',
+            type: 'paragraph' as const,
             content: article.excerpt || 'Full content unavailable'
           }
         ],
