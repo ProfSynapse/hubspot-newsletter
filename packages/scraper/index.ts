@@ -1,4 +1,4 @@
-import { initializeDatabase, insertArticle, cleanOldArticles } from './common/database/sqlite';
+import { initializeDatabase, insertArticle, cleanOldArticles } from './common/database/postgres';
 import { parseAllFeeds } from './common/scrapers/rss-parser';
 import { scrapeArticles } from './common/scrapers/content-scraper';
 import dotenv from 'dotenv';

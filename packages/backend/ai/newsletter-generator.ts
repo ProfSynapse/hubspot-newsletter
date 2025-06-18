@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Article } from '../common/database/sqlite';
+import { Article } from '../common/database/postgres';
 import dotenv from 'dotenv';
 
 dotenv.config();

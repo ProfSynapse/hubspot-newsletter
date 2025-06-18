@@ -8,7 +8,7 @@
     "dev": "ts-node index.ts"
   },
   "dependencies": {
-    "sqlite3": "^5.1.6",
+    "pg": "^8.11.3",
     "rss-parser": "^3.13.0",
     "cheerio": "^1.0.0-rc.12",
     "@mozilla/readability": "^0.5.0",
@@ -20,6 +20,7 @@
     "typescript": "^5.3.3",
     "@types/node": "^20.10.5",
     "ts-node": "^10.9.2",
-    "@types/jsdom": "^21.1.6"
+    "@types/jsdom": "^21.1.6",
+    "@types/pg": "^8.10.9"
   }
 }

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { searchArticles, getRecentArticles } from '../common/database/sqlite';
+import { searchArticles, getRecentArticles } from '../common/database/postgres';
 import { generateNewsletter } from '../ai/newsletter-generator';
 
 const router = Router();
