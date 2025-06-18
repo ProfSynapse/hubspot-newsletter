@@ -64,8 +64,24 @@ router.post('/curate-articles', async (req: Request, res: Response) => {
     }
 
     // Use AI to curate the most relevant articles
-    const curatedArticleIds = await curateArticles(query, articles);
-    const curatedArticlesList = articles.filter(article => curatedArticleIds.includes(article.id!));
+    const curationResult = await curateArticles(query, articles);
+    
+    // If no relevant articles found, return appropriate response
+    if (!curationResult.hasRelevantArticles) {
+      return res.json({
+        success: true,
+        query,
+        hasRelevantArticles: false,
+        reasoning: curationResult.reasoning,
+        message: "No recent articles found on this topic. Try searching for business, tech, AI, or finance topics instead.",
+        articleCount: 0,
+        totalArticlesConsidered: articles.length,
+        articles: []
+      });
+    }
+    
+    // Process the curated articles
+    const curatedArticlesList = articles.filter(article => curationResult.articleIds.includes(article.id!));
 
     const curatedArticles: CuratedArticle[] = curatedArticlesList.map(article => ({
       id: article.id!,
@@ -79,6 +95,8 @@ router.post('/curate-articles', async (req: Request, res: Response) => {
     res.json({
       success: true,
       query,
+      hasRelevantArticles: true,
+      reasoning: curationResult.reasoning,
       articleCount: curatedArticles.length,
       totalArticlesConsidered: articles.length,
       articles: curatedArticles

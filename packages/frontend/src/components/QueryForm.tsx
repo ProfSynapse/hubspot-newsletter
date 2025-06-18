@@ -79,13 +79,6 @@ const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
           ))}
         </div>
       </div>
-      
-      <div className="border-t border-gray-100 pt-4">
-        <p className="text-xs text-gray-500 text-center">
-          💡 Our newsletter covers current events only. We analyze stories from the past 2-3 days 
-          from sources like TechCrunch, CNBC, Harvard Business Review, and more.
-        </p>
-      </div>
     </div>
   );
 };

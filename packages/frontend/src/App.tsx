@@ -6,7 +6,7 @@ import { curateArticles, generateFromCurated, checkHealth } from './api/newslett
 import { Newsletter, CuratedArticle } from './types/newsletter';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
-type AppState = 'form' | 'curating' | 'curation-complete' | 'generating' | 'newsletter' | 'error';
+type AppState = 'form' | 'curating' | 'curation-complete' | 'no-relevant-articles' | 'generating' | 'newsletter' | 'error';
 
 function App() {
   const [state, setState] = useState<AppState>('form');
@@ -15,6 +15,7 @@ function App() {
   const [articleCount, setArticleCount] = useState(0);
   const [curatedArticles, setCuratedArticles] = useState<CuratedArticle[]>([]);
   const [totalArticlesConsidered, setTotalArticlesConsidered] = useState(0);
+  const [curationReasoning, setCurationReasoning] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isHealthy, setIsHealthy] = useState(true);
 
@@ -32,6 +33,14 @@ function App() {
       const curationResponse = await curateArticles(userQuery);
       setCuratedArticles(curationResponse.articles);
       setTotalArticlesConsidered(curationResponse.totalArticlesConsidered);
+      setCurationReasoning(curationResponse.reasoning || '');
+      
+      // Check if no relevant articles were found
+      if (curationResponse.hasRelevantArticles === false) {
+        setState('no-relevant-articles');
+        return;
+      }
+      
       setState('curation-complete');
       
       // Automatically proceed to Phase 2 after a brief pause
@@ -62,6 +71,7 @@ function App() {
     setQuery('');
     setCuratedArticles([]);
     setTotalArticlesConsidered(0);
+    setCurationReasoning('');
     setError(null);
   };
 
@@ -151,6 +161,54 @@ function App() {
                     • {article.title} - {article.source}
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {state === 'no-relevant-articles' && (
+          <div className="space-y-8">
+            <Hero />
+            <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-8 text-center">
+              <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No recent articles found for "{query}"
+              </h3>
+              <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
+                {curationReasoning}
+              </p>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Our sources are updated every few hours with business, tech, and finance news.
+                  Try searching for one of these trending topics:
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {['AI & Machine Learning', 'Tech Startups', 'Crypto & Finance', 'SaaS Business'].map((topic) => (
+                    <button
+                      key={topic}
+                      onClick={() => {
+                        handleNewQuery();
+                        // Pre-fill the search with this topic
+                        setTimeout(() => {
+                          const textarea = document.querySelector('textarea');
+                          if (textarea) {
+                            textarea.value = topic;
+                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                          }
+                        }, 100);
+                      }}
+                      className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full transition-colors text-sm"
+                    >
+                      {topic}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={handleNewQuery}
+                  className="mt-4 bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Try Another Search
+                </button>
               </div>
             </div>
           </div>

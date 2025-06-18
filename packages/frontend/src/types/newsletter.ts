@@ -27,6 +27,9 @@ export interface CuratedArticle {
 export interface CurateArticlesResponse {
   success: boolean;
   query: string;
+  hasRelevantArticles?: boolean;
+  reasoning?: string;
+  message?: string;
   articleCount: number;
   totalArticlesConsidered: number;
   articles: CuratedArticle[];
