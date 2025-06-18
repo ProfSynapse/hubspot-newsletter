@@ -66,7 +66,7 @@ const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
             <button
               key={topic}
               onClick={() => handleSuggestionClick(topic)}
-              className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full transition-colors"
+              className="px-3 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 text-sm rounded-full transition-colors"
             >
               {topic}
             </button>
