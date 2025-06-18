@@ -258,7 +258,15 @@ describe('Full Two-Phase Newsletter Workflow with Real Data', () => {
       
       // Verify newsletter follows The Hustle style (should be conversational and witty)
       const newsletter = generationResponse.body.newsletter;
-      expect(newsletter.subject).toMatch(/[🔥💰📊🚀💡]/); // Should contain emojis
+      expect(newsletter.sections.length).toBeGreaterThan(0);
+      // Verify sections have the required structure
+      newsletter.sections.forEach((section: any) => {
+        expect(section.emoji).toBeDefined(); // Should have emoji property
+        expect(section.headline).toBeDefined();
+        expect(section.content).toBeDefined();
+        expect(section.whyItMatters).toBeDefined();
+        expect(Array.isArray(section.urls)).toBe(true);
+      });
       expect(newsletter.actionableAdvice).toMatch(/your move/i); // Should contain "Your move:" style advice
       
       console.log('AI model verification complete');

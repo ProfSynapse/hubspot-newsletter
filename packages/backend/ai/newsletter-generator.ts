@@ -48,7 +48,7 @@ CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text. Us
 
 Generate a JSON response with this structure:
 {
-  "subject": "Newsletter subject line",
+  "subject": "Emoji then Newsletter subject line",
   "intro": "Brief introduction",
   "sections": [
     {
