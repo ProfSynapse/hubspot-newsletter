@@ -47,8 +47,7 @@ REQUIREMENTS:
 3. Use emojis for story headers (🔥, 💰, 📊, 🚀, 💡)
 4. Keep total length to 5-minute read
 5. Include source URLs for each story section
-6. Format "Why it Matters" as bold text, not in a callout block
-7. URLs should be listed in the "urls" array, not in callout blocks
+6. URLs should be listed in the "urls" array, not in callout blocks
 
 CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text. Use proper JSON syntax with commas (not semicolons).
 
@@ -61,7 +60,7 @@ Generate a JSON response with this structure:
       "emoji": "Relevant emoji",
       "headline": "Story headline",
       "content": "Story analysis (2-3 paragraphs)",
-      "whyItMatters": "Business insight (format as **Why it Matters**: text)",
+      "whyItMatters": "Relevant business insight",
       "urls": ["Source article URL 1", "Source article URL 2"]
     }
   ],
@@ -80,14 +79,14 @@ Example 1:
       "emoji": "🔥",
       "headline": "NVIDIA's New Blackwell Chips Are Already Sold Out",
       "content": "NVIDIA just dropped their latest Blackwell architecture, and it's causing chaos in the best way possible. Major cloud providers are throwing elbows to get their hands on these chips, with some orders backed up until 2025. The performance gains are staggering — we're talking 4x faster training speeds compared to the previous generation.\\n\\nBut here's the kicker: the price tag matches the hype. A single Blackwell system can cost upwards of $200K, making this a rich company's game. Smaller AI startups are getting priced out, while Big Tech doubles down.",
-      "whyItMatters": "**Why it Matters**: This chip shortage is creating a two-tier AI economy. Companies with deep pockets will dominate, while smaller players scramble for scraps or pivot to efficiency-focused strategies.",
+      "whyItMatters": "This chip shortage is creating a two-tier AI economy. Companies with deep pockets will dominate, while smaller players scramble for scraps or pivot to efficiency-focused strategies.",
       "urls": ["https://techcrunch.com/nvidia-blackwell-sold-out", "https://reuters.com/nvidia-chip-shortage"]
     },
     {
       "emoji": "💰", 
       "headline": "OpenAI's Revenue Hits $3.4B Annually",
       "content": "OpenAI just leaked their latest numbers, and they're eye-watering. The company is pulling in $3.4 billion annually, up from practically zero just two years ago. ChatGPT subscriptions are driving most of the revenue, but enterprise deals are the real goldmine.\\n\\nThe plot twist? They're still burning through cash faster than a crypto whale in 2021. Training costs, talent acquisition, and compute expenses are eating into margins. Profitability is still a distant dream, but investors don't seem to care.",
-      "whyItMatters": "**Why it Matters**: OpenAI's revenue proves there's massive demand for AI tools, but their cash burn shows this market is still in hypergrowth mode. Expect more fundraising rounds and potential IPO discussions.",
+      "whyItMatters": "OpenAI's revenue proves there's massive demand for AI tools, but their cash burn shows this market is still in hypergrowth mode. Expect more fundraising rounds and potential IPO discussions.",
       "urls": ["https://bloomberg.com/openai-revenue-3-4-billion"]
     }
   ],
@@ -104,7 +103,7 @@ Example 2:
       "emoji": "🔥",
       "headline": "Salesforce Cuts 10% of Workforce Despite Record Revenue",
       "content": "Salesforce just pulled a classic 2024 move: record revenue, massive layoffs. The CRM giant reported $8.6B in quarterly revenue but axed 8,000+ employees anyway. CEO Marc Benioff says they're 'right-sizing for the current environment.'\\n\\nThis isn't about survival — it's about margins. Wall Street rewarded the decision with a 12% stock bump. The message is clear: growth without profitability is so 2021.",
-      "whyItMatters": "**Why it Matters**: When profitable companies start cutting deep, it signals a fundamental shift in SaaS economics. Expect more 'right-sizing' across the industry as companies prioritize efficiency over expansion.",
+      "whyItMatters": "When profitable companies start cutting deep, it signals a fundamental shift in SaaS economics. Expect more 'right-sizing' across the industry as companies prioritize efficiency over expansion.",
       "urls": ["https://salesforce.com/layoffs-announcement", "https://wsj.com/salesforce-workforce-reduction"]
     }
   ],
@@ -229,7 +228,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         emoji: ['🔥', '💰', '📊'][index] || '📰',
         headline: article.title,
         content: article.excerpt || 'Full content unavailable',
-        whyItMatters: '**Why it Matters**: This story is relevant to your interests in ' + userQuery,
+        whyItMatters: 'This story is relevant to your interests in ' + userQuery,
         urls: [article.url]
       })),
       actionableAdvice: 'Stay tuned for more updates on ' + userQuery,

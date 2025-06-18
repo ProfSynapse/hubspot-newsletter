@@ -28,6 +28,9 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
       if (line.startsWith('*') && line.endsWith('*')) {
         return <p key={index} className="text-gray-600 text-sm italic border-l-4 border-orange-200 pl-4 my-4">{line.slice(1, -1)}</p>;
       }
+      if (line.startsWith('> ')) {
+        return <blockquote key={index} className="text-gray-600 text-sm border-l-4 border-gray-300 pl-4 my-4 bg-gray-50 py-2">{line.slice(2)}</blockquote>;
+      }
       if (line.trim() === '') {
         return <div key={index} className="h-2"></div>;
       }
@@ -46,7 +49,10 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     newsletter.sections.forEach((section, index) => {
       content += `**${section.emoji} Story #${index + 1}: ${section.headline}**\n`;
       content += `${section.content}\n\n`;
-      content += `*Why this matters: ${section.whyItMatters}*\n\n`;
+      content += `**Why it Matters**: ${section.whyItMatters}\n\n`;
+      if (section.urls && section.urls.length > 0) {
+        content += `> Sources: ${section.urls.join(', ')}\n\n`;
+      }
     });
     
     content += `## Why This Matters for Your Business\n\n`;
