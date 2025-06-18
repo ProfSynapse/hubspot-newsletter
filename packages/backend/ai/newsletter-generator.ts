@@ -12,6 +12,7 @@ interface NewsletterSection {
   headline: string;
   content: string;
   whyItMatters: string;
+  url: string;
 }
 
 interface GeneratedNewsletter {
@@ -27,6 +28,7 @@ function createNewsletterPrompt(userQuery: string, articles: Article[]): string 
     `Article ${index + 1}:
     Title: ${article.title}
     Source: ${article.source}
+    URL: ${article.url}
     Summary: ${article.excerpt || article.content?.substring(0, 200)}
     Published: ${article.published_at}`
   ).join('\n\n');
@@ -43,6 +45,7 @@ REQUIREMENTS:
 2. Structure: subject line, brief intro, 3-4 key stories with analysis, actionable takeaway
 3. Use emojis for story headers (🔥, 💰, 📊, 🚀, 💡)
 4. Keep total length to 5-minute read
+5. Include the source URL for each story section to hyperlink the headline
 
 Generate a JSON response with this structure:
 {
@@ -53,7 +56,8 @@ Generate a JSON response with this structure:
       "emoji": "🔥",
       "headline": "Story headline",
       "content": "Story analysis (2-3 paragraphs)",
-      "whyItMatters": "Business insight"
+      "whyItMatters": "Business insight",
+      "url": "Source article URL for hyperlinking the headline"
     }
   ],
   "actionableAdvice": "Your move: specific advice",
@@ -106,7 +110,8 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         emoji: ['🔥', '💰', '📊'][index] || '📰',
         headline: article.title,
         content: article.excerpt || 'Full content unavailable',
-        whyItMatters: 'This story is relevant to your interests in ' + userQuery
+        whyItMatters: 'This story is relevant to your interests in ' + userQuery,
+        url: article.url
       })),
       actionableAdvice: 'Stay tuned for more updates on ' + userQuery,
       signoff: 'Until next time!'
