@@ -7,7 +7,7 @@ const Hero: React.FC = () => {
         <img 
           src="https://20627419.fs1.hubspotusercontent-na1.net/hubfs/20627419/The%20Hustle/Logos/The%20Hustle%20Logo.png" 
           alt="The Hustle Logo" 
-          className="h-16 w-auto"
+          className="h-32 w-auto"
         />
         <h2 className="text-4xl font-bold text-gray-900">
           Get your personalized<br />
