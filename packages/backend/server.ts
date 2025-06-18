@@ -5,7 +5,8 @@ import dotenv from 'dotenv';
 import { initializeDatabase } from './common/database/postgres';
 import apiRoutes from './api/routes';
 
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Load environment variables - in production these come from Railway
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,16 +31,17 @@ async function startServer() {
   try {
     await initializeDatabase();
     console.log('✅ Database initialized');
-    
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📡 API available at /api`);
-    });
   } catch (error) {
-    console.error('💥 Failed to start server:', error);
-    process.exit(1);
+    console.error('⚠️  Database initialization failed:', error);
+    console.log('📌 Continuing without database...');
   }
+  
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📡 API available at /api`);
+    console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  });
 }
 
 startServer();

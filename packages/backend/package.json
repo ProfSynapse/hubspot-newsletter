@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc",
-    "start": "npm run build && node dist/server.js",
+    "start": "node dist/server.js",
+    "start:dev": "npm run build && node dist/server.js",
     "test": "jest",
     "test:coverage": "jest --coverage"
   },

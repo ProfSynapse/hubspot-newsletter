@@ -7,24 +7,29 @@ dotenv.config();
 const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 if (!connectionString) {
-  throw new Error('DATABASE_URL or POSTGRES_URL environment variable is required for PostgreSQL connection');
+  console.error('WARNING: DATABASE_URL or POSTGRES_URL environment variable is not set. Database features will be disabled.');
 }
 
-const pool = new Pool({
+const pool = connectionString ? new Pool({
   connectionString,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+}) : null;
 
 // Test connection on startup
-pool.on('connect', () => {
-  console.log('Connected to PostgreSQL database');
-});
+if (pool) {
+  pool.on('connect', () => {
+    console.log('Connected to PostgreSQL database');
+  });
 
-pool.on('error', (err) => {
-  console.error('PostgreSQL pool error:', err);
-});
+  pool.on('error', (err) => {
+    console.error('PostgreSQL pool error:', err);
+  });
+}
 
 export async function query(text: string, params?: any[]): Promise<any> {
+  if (!pool) {
+    throw new Error('Database not configured');
+  }
   const client = await pool.connect();
   try {
     const result = await client.query(text, params);
@@ -35,6 +40,10 @@ export async function query(text: string, params?: any[]): Promise<any> {
 }
 
 export async function initializeDatabase(): Promise<void> {
+  if (!pool) {
+    console.log('Database not configured - skipping initialization');
+    return;
+  }
   try {
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS articles (
