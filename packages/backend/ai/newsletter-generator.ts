@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-2.5-pro';
+const MODEL = 'anthropic/claude-sonnet-4';
 
 interface NewsletterSection {
   emoji: string;
@@ -48,7 +48,9 @@ REQUIREMENTS:
 4. Keep total length to 5-minute read
 5. Include source URLs for each story section
 6. Format "Why it Matters" as bold text, not in a callout block
-7. Add sources section after each story in a callout format
+7. URLs should be listed in the "urls" array, not in callout blocks
+
+CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text. Use proper JSON syntax with commas (not semicolons).
 
 Generate a JSON response with this structure:
 {
@@ -122,16 +124,79 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         messages: [
           {
             role: 'system',
-            content: 'You are The Hustle newsletter writer. Generate engaging business newsletters in JSON format.'
+            content: prompt
           },
           {
             role: 'user',
-            content: prompt
+            content: userQuery
           }
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' }
+        temperature: 0.3,
+        max_tokens: 8192,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'newsletter_response',
+            strict: true,
+            schema: {
+              type: 'object',
+              properties: {
+                subject: {
+                  type: 'string',
+                  description: 'Newsletter subject line'
+                },
+                intro: {
+                  type: 'string',
+                  description: 'Brief introduction paragraph'
+                },
+                sections: {
+                  type: 'array',
+                  description: 'Array of newsletter sections',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      emoji: {
+                        type: 'string',
+                        description: 'Relevant emoji for the section'
+                      },
+                      headline: {
+                        type: 'string',
+                        description: 'Story headline'
+                      },
+                      content: {
+                        type: 'string',
+                        description: 'Story analysis content (2-3 paragraphs)'
+                      },
+                      whyItMatters: {
+                        type: 'string',
+                        description: 'Business insight with bold formatting'
+                      },
+                      urls: {
+                        type: 'array',
+                        description: 'Source article URLs',
+                        items: {
+                          type: 'string'
+                        }
+                      }
+                    },
+                    required: ['emoji', 'headline', 'content', 'whyItMatters', 'urls'],
+                    additionalProperties: false
+                  }
+                },
+                actionableAdvice: {
+                  type: 'string',
+                  description: 'Your move: specific actionable advice'
+                },
+                signoff: {
+                  type: 'string',
+                  description: 'Newsletter closing/signoff'
+                }
+              },
+              required: ['subject', 'intro', 'sections', 'actionableAdvice', 'signoff'],
+              additionalProperties: false
+            }
+          }
+        }
       },
       {
         headers: {

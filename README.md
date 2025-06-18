@@ -1,6 +1,6 @@
 # HubSpot Newsletter Bot
 
-AI-powered newsletter generator using Google Gemini 2.5 Pro, built for HubSpot Media assessment.
+AI-powered newsletter generator using Anthropic's Claude Sonnet 4, built for HubSpot Media assessment.
 
 ## 🚀 Railway Deployment
 

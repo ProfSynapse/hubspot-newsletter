@@ -113,6 +113,9 @@ function cleanJsonString(text: string): string {
     // Fix common quote issues
     .replace(/[""]/g, '"')
     .replace(/['']/g, "'")
+    // Fix semicolons that should be commas in arrays/objects
+    .replace(/;(\s*[}\]])/g, '$1')
+    .replace(/;(\s*")/g, ',$1')
     // Remove trailing commas before closing braces/brackets
     .replace(/,(\s*[}\]])/g, '$1');
 }
