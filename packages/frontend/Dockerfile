@@ -40,7 +40,7 @@ COPY start.sh ./
 RUN chmod +x start.sh
 
 # Expose port
-EXPOSE 8080
+EXPOSE 4173
 
 # Start serve with dynamic port
 CMD ["sh", "./start.sh"]
