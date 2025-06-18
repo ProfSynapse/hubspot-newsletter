@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Header from './components/Header';
 import Hero from './components/Hero';
 import QueryForm from './components/QueryForm';
 import NewsletterDisplay from './components/NewsletterDisplay';
@@ -68,7 +67,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50">
-      <Header />
       
       {!isHealthy && (
         <div className="bg-yellow-50 border-b border-yellow-200 p-3">
@@ -84,6 +82,45 @@ function App() {
           <div className="space-y-8">
             <Hero />
             <QueryForm onSubmit={handleSubmit} isLoading={false} />
+            
+            <div className="bg-white/60 backdrop-blur rounded-xl border border-gray-200 p-6">
+              <h4 className="text-lg font-medium text-gray-900 mb-4 text-center">Our Data Sources</h4>
+              <div className="grid md:grid-cols-3 gap-6 text-sm">
+                <div>
+                  <h5 className="font-semibold text-gray-800 mb-2">🚀 Tech & Innovation</h5>
+                  <ul className="text-gray-600 space-y-1">
+                    <li>• TechCrunch</li>
+                    <li>• The Verge</li>
+                    <li>• Wired</li>
+                    <li>• Ars Technica</li>
+                    <li>• Hacker News</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 className="font-semibold text-gray-800 mb-2">💼 Business & Finance</h5>
+                  <ul className="text-gray-600 space-y-1">
+                    <li>• Harvard Business Review</li>
+                    <li>• Yahoo Finance</li>
+                    <li>• CNBC Business</li>
+                    <li>• Inc.com</li>
+                    <li>• Seeking Alpha</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 className="font-semibold text-gray-800 mb-2">📈 Markets & Startups</h5>
+                  <ul className="text-gray-600 space-y-1">
+                    <li>• VentureBeat</li>
+                    <li>• Marketing Land</li>
+                    <li>• The Next Web</li>
+                    <li>• Steve Blank</li>
+                    <li>• Investing.com</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-6 pt-4 border-t border-gray-200 text-center text-xs text-gray-500">
+                <p>✨ Articles are refreshed every few hours. Best results for topics from the last 2-3 days.</p>
+              </div>
+            </div>
           </div>
         )}
 

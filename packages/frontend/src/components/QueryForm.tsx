@@ -7,10 +7,12 @@ interface QueryFormProps {
 }
 
 const SUGGESTED_TOPICS = [
-  'AI',
-  'Finance',
-  'Technology',
-  'Business'
+  'AI & Machine Learning',
+  'Crypto & Finance',
+  'Tech Startups',
+  'Market News',
+  'SaaS & Software',
+  'Venture Capital'
 ];
 
 const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
@@ -29,13 +31,17 @@ const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-8 space-y-6">
-      <h3 className="text-xl font-semibold text-gray-900">What's on your mind today?</h3>
+      <h3 className="text-xl font-semibold text-gray-900">What current events interest you?</h3>
+      <p className="text-sm text-gray-600">
+        Ask about recent business, tech, or finance news from our curated sources. 
+        <span className="text-orange-600 font-medium"> Focus on topics from the last few days.</span>
+      </p>
       
       <div className="space-y-4">
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="e.g., AI startup funding, SaaS pricing strategies, remote work trends, fintech regulations..."
+          placeholder="e.g., latest AI funding rounds, recent tech acquisitions, this week's market volatility, new startup launches..."
           className="w-full h-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500"
           disabled={isLoading}
         />
@@ -72,6 +78,13 @@ const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
             </button>
           ))}
         </div>
+      </div>
+      
+      <div className="border-t border-gray-100 pt-4">
+        <p className="text-xs text-gray-500 text-center">
+          💡 Our newsletter covers current events only. We analyze stories from the past 2-3 days 
+          from sources like TechCrunch, CNBC, Harvard Business Review, and more.
+        </p>
       </div>
     </div>
   );

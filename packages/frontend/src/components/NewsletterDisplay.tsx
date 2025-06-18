@@ -38,7 +38,7 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
         h1 { color: #ea580c; border-bottom: 2px solid #fed7aa; padding-bottom: 10px; }
         h2 { color: #9a3412; margin-top: 30px; }
         .section { margin: 20px 0; }
-        .why-matters { background: #fff7ed; padding: 15px; border-left: 4px solid #fb923c; margin: 10px 0; }
+        .why-matters { margin: 10px 0; }
         .sources { background: #f9fafb; padding: 10px; border: 1px solid #e5e7eb; margin: 10px 0; font-size: 0.9em; }
         .sources a { color: #2563eb; text-decoration: none; }
         .sources a:hover { text-decoration: underline; }
@@ -59,7 +59,7 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
         <h3>${section.emoji} Story #${index + 1}: ${section.headline}</h3>
         <p>${section.content}</p>
         <div class="why-matters">
-            <strong>Why it Matters:</strong> ${section.whyItMatters}
+            <strong>Why it Matters:</strong> ${section.whyItMatters.replace(/\*([^*]+)\*/g, '$1')}
         </div>
         ${section.urls && section.urls.length > 0 ? `
         <div class="sources">
