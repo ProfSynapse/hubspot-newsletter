@@ -53,7 +53,7 @@ router.post('/curate-articles', async (req: Request, res: Response) => {
     
     if (articles.length < 5) {
       const recentArticles = await getRecentArticles(24);
-      articles = [...articles, ...recentArticles].slice(0, 10);
+      articles = [...articles, ...recentArticles].slice(0, 100);
     }
     
     if (articles.length === 0) {
@@ -178,7 +178,7 @@ router.post('/generate', async (req: Request, res: Response) => {
     
     if (articles.length < 5) {
       const recentArticles = await getRecentArticles(24);
-      articles = [...articles, ...recentArticles].slice(0, 10);
+      articles = [...articles, ...recentArticles].slice(0, 100);
     }
     
     if (articles.length === 0) {
