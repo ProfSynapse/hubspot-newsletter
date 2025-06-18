@@ -4,8 +4,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --exec ts-node server.ts",
-    "build": "tsc && npm run copy:frontend",
-    "copy:frontend": "mkdir -p dist/public && cp -r frontend/dist/* dist/public/ 2>/dev/null || echo 'Frontend build not found'",
+    "build": "tsc",
     "start": "npm run build && node dist/server.js",
     "test": "jest",
     "test:coverage": "jest --coverage"
