@@ -183,7 +183,7 @@ function App() {
                   Try searching for one of these trending topics:
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  {['AI & Machine Learning', 'Tech Startups', 'Crypto & Finance', 'SaaS Business'].map((topic) => (
+                  {['AI', 'Technology', 'Crypto', 'Finance', 'Market Trends'].map((topic) => (
                     <button
                       key={topic}
                       onClick={() => {

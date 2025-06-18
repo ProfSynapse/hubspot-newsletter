@@ -86,7 +86,7 @@ Example 1:
     }
   ],
   "actionableAdvice": "Your move: If you're in tech, start budgeting for AI infrastructure now. Chip shortages mean longer lead times, and prices aren't coming down anytime soon.",
-  "signoff": "Keep innovating (and maybe start that AI chip fund),"
+  "signoff": "Keep innovating (and maybe start that AI chip fund),\n\nThe Hustle Team"
 }
 
 Example 2:
@@ -103,7 +103,7 @@ Example 2:
     }
   ],
   "actionableAdvice": "Your move: Audit your SaaS stack now. Consolidate tools, renegotiate contracts, and focus on ROI metrics. The free lunch is officially over.",
-  "signoff": "Stay profitable out there,"
+  "signoff": "Stay profitable out there,\n\nThe Hustle Team"
 }`;
 }
 
@@ -227,7 +227,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         urls: [article.url]
       })),
       actionableAdvice: 'Stay tuned for more updates on ' + userQuery,
-      signoff: 'Until next time!'
+      signoff: 'Until next time!\n\nThe Hustle Team'
     };
   }
 }

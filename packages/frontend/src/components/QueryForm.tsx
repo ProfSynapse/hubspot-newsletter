@@ -7,12 +7,11 @@ interface QueryFormProps {
 }
 
 const SUGGESTED_TOPICS = [
-  'AI & Machine Learning',
-  'Crypto & Finance',
-  'Tech Startups',
-  'Market News',
-  'SaaS & Software',
-  'Venture Capital'
+  'AI',
+  'Crypto',
+  'Finance',
+  'Technology',
+  'Market News'
 ];
 
 const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
