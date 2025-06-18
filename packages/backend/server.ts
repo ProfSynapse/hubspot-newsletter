@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
-import { initializeDatabase } from '../common/database/sqlite';
+import { initializeDatabase } from './common/database/sqlite';
 import apiRoutes from './api/routes';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
