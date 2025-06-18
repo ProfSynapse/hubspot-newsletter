@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const CURATION_MODEL = 'openai/gpt-4.1-mini';
+const CURATION_MODEL = 'google/gemini-2.5-flash';
 
 interface CurationResult {
   articleIds: number[];

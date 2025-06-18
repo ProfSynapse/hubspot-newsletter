@@ -186,10 +186,10 @@ describe('Two-Phase API Integration Tests', () => {
     test('should document AI model usage expectations', () => {
       // This test documents which AI models should be used for each phase
       
-      const phase1CurationModel = 'openai/gpt-4.1-mini';
+      const phase1CurationModel = 'google/gemini-2.5-flash';
       const phase2GenerationModel = 'google/gemini-2.5-pro';
       
-      expect(phase1CurationModel).toBe('openai/gpt-4.1-mini');
+      expect(phase1CurationModel).toBe('google/gemini-2.5-flash');
       expect(phase2GenerationModel).toBe('google/gemini-2.5-pro');
       
       // The article curator should use GPT-4.1 for intelligent article selection
