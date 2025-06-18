@@ -5,14 +5,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const CURATION_MODEL = 'openai/gpt-4.1';
+const CURATION_MODEL = 'openai/gpt-4.1-mini';
 
 interface CurationResult {
   articleIds: number[];
   reasoning: string;
 }
 
-function createCurationPrompt(userQuery: string, articles: Article[]): string {
+function createCurationPrompt(articles: Article[]): string {
   const articlesContext = articles.map((article, index) => 
     `Article ${index + 1} (ID: ${article.id}):
     Title: ${article.title}
@@ -23,8 +23,6 @@ function createCurationPrompt(userQuery: string, articles: Article[]): string {
   ).join('\n\n');
 
   return `You are an expert content curator for business newsletters. Your job is to select the most relevant and valuable articles for a user's specific interests.
-
-USER QUERY: "${userQuery}"
 
 AVAILABLE ARTICLES:
 ${articlesContext}
@@ -42,8 +40,8 @@ Return your selection as a JSON object with the article IDs and brief reasoning.
 CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text.
 
 {
-  "articleIds": [1, 3, 7],
-  "reasoning": "Brief explanation of why these articles were selected"
+  "reasoning": "Brief explanation of why these articles were selected",
+  "articleIds": [1, 3, 7]
 }`;
 }
 
@@ -58,7 +56,7 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
       return articles.map(article => article.id!).filter(id => id !== undefined);
     }
 
-    const prompt = createCurationPrompt(userQuery, articles);
+    const prompt = createCurationPrompt(articles);
     
     const response = await axios.post(
       OPENROUTER_API_URL,

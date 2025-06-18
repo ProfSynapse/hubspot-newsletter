@@ -24,30 +24,25 @@ interface GeneratedNewsletter {
   signoff: string;
 }
 
-function createNewsletterPrompt(userQuery: string, articles: Article[]): string {
+function createNewsletterPrompt(articles: Article[]): string {
   const articlesContext = articles.map((article, index) => 
     `Article ${index + 1}:
     Title: ${article.title}
     Source: ${article.source}
     URL: ${article.url}
-    Summary: ${article.excerpt || article.content?.substring(0, 200)}
+    Content: ${article.content || article.excerpt || 'Content not available'}
     Published: ${article.published_at}`
   ).join('\n\n');
 
   return `You are a newsletter writer for The Hustle. Create a personalized newsletter based on the user's interests and today's news.
 
-USER INTEREST: "${userQuery}"
-
-TODAY'S RELEVANT NEWS:
+<News>
 ${articlesContext}
+</News>
 
 REQUIREMENTS:
 1. Write in The Hustle's signature style (conversational, witty, business-focused)
 2. Structure: subject line, brief intro, 3-4 key stories with analysis, actionable takeaway
-3. Use emojis for story headers (🔥, 💰, 📊, 🚀, 💡)
-4. Keep total length to 5-minute read
-5. Include source URLs for each story section
-6. URLs should be listed in the "urls" array, not in callout blocks
 
 CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text. Use proper JSON syntax with commas (not semicolons).
 
@@ -114,7 +109,7 @@ Example 2:
 
 export async function generateNewsletter(userQuery: string, articles: Article[]): Promise<GeneratedNewsletter> {
   try {
-    const prompt = createNewsletterPrompt(userQuery, articles);
+    const prompt = createNewsletterPrompt(articles);
     
     const response = await axios.post(
       OPENROUTER_API_URL,

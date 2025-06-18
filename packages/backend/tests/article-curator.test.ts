@@ -113,7 +113,7 @@ describe('Article Curator', () => {
       
       // Should prefer AI-related articles
       const aiArticleIds = mockArticles
-        .filter(article => article.category === 'AI' || article.title.toLowerCase().includes('ai') || article.content.toLowerCase().includes('artificial intelligence'))
+        .filter(article => article.category === 'AI' || article.title.toLowerCase().includes('ai') || (article.content && article.content.toLowerCase().includes('artificial intelligence')))
         .map(article => article.id!);
       
       const selectedAiArticles = result.filter(id => aiArticleIds.includes(id));
@@ -136,7 +136,7 @@ describe('Article Curator', () => {
       
       // Should prefer business-related articles
       const businessArticleIds = mockArticles
-        .filter(article => article.category === 'Business' || article.title.toLowerCase().includes('saas') || article.content.toLowerCase().includes('business'))
+        .filter(article => article.category === 'Business' || article.title.toLowerCase().includes('saas') || (article.content && article.content.toLowerCase().includes('business')))
         .map(article => article.id!);
       
       const selectedBusinessArticles = result.filter(id => businessArticleIds.includes(id));

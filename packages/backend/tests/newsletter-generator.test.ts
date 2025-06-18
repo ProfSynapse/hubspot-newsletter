@@ -1,5 +1,5 @@
 import { generateNewsletter } from '../ai/newsletter-generator';
-import { Article } from '../../common/database/sqlite';
+import { Article } from '../common/database/postgres';
 
 describe('Newsletter Generator', () => {
   const sampleArticles: Article[] = [

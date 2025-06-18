@@ -1,5 +1,5 @@
-import { scrapeFullContent, scrapeArticles } from '../../common/scrapers/content-scraper';
-import { Article } from '../../common/database/sqlite';
+import { scrapeFullContent } from '../common/scrapers/content-scraper';
+import { Article } from '../common/database/postgres';
 
 describe('Content Scraper', () => {
   const sampleArticle: Article = {
@@ -56,7 +56,7 @@ describe('Content Scraper', () => {
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBe(articles.length);
     
-    results.forEach(result => {
+    results.forEach((result: any) => {
       expect(result).toHaveProperty('title');
       expect(result).toHaveProperty('url');
       expect(result).toHaveProperty('content');
