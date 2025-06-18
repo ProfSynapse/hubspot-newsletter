@@ -43,11 +43,14 @@ CRITICAL DECISION PROCESS:
 4. Set hasRelevantArticles to false if articles are only tangentially related or completely off-topic
 
 SELECTION CRITERIA (if relevant articles exist):
+- Select only the 3-6 MOST relevant articles (never more than 6)
 - Direct relevance to the user's interests
 - Business impact and importance
 - Timeliness and newsworthiness
 - Diversity of perspectives/sources
 - Actionable insights potential
+
+IMPORTANT: Return maximum 6 articles. Quality over quantity.
 
 REASONING FIELD:
 - If hasRelevantArticles is TRUE: Explain why you selected these specific articles and how they relate to the query
@@ -72,7 +75,7 @@ Response: {
 Query: "remote work trends"
 Response: {
   "hasRelevantArticles": true,
-  "reasoning": "Found articles discussing how companies are adapting workplace policies, hybrid work models, and the business impact of remote work on productivity and hiring.",
+  "reasoning": "Found 3 articles discussing how companies are adapting workplace policies, hybrid work models, and the business impact of remote work on productivity and hiring.",
   "articleIds": [3, 7, 14]
 }
 
@@ -118,7 +121,7 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
           }
         ],
         temperature: 0.3,
-        max_tokens: 1024,
+        max_tokens: 16000,
         response_format: {
           type: 'json_schema',
           json_schema: {
@@ -160,7 +163,16 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
     );
 
     const content = response.data.choices[0].message.content;
-    const curationResult: CurationResult = JSON.parse(content);
+    console.log('Raw AI response:', content);
+    
+    let curationResult: CurationResult;
+    try {
+      curationResult = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse AI response as JSON. Raw content:', content);
+      console.error('Parse error:', parseError);
+      throw new Error(`Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+    }
     
     console.log(`AI Curation: hasRelevantArticles=${curationResult.hasRelevantArticles}, reasoning: ${curationResult.reasoning}`);
     

@@ -216,7 +216,7 @@ const testCases: TestCase[] = [
 ];
 
 async function runCuratorTests() {
-  console.log('🔍 Starting Curator Relevance Tests\n');
+  console.log('🔍 Starting Curator Relevance Tests - Batch 3 (Post-Fix Relevant Topics)\n');
   console.log('Fetching recent articles from database...\n');
   
   try {
@@ -239,7 +239,7 @@ async function runCuratorTests() {
     let correctPredictions = 0;
     const results: Array<{testCase: TestCase, result: boolean, aiResult: boolean}> = [];
     
-    for (const testCase of testCases.slice(0, 10)) { // Test first 10 cases for speed
+    for (const testCase of testCases.slice(11, 21)) { // Test cases 11-21 (relevant topics)
       console.log(`\n📋 TEST: "${testCase.query}"`);
       console.log(`   Description: ${testCase.description}`);
       console.log(`   Expected: ${testCase.expectedRelevant ? '✅ RELEVANT' : '❌ NOT RELEVANT'}`);
@@ -285,7 +285,7 @@ async function runCuratorTests() {
     // Summary
     console.log('\n' + '='.repeat(80));
     console.log('\n📊 SUMMARY:');
-    const testCount = testCases.slice(0, 10).length;
+    const testCount = testCases.slice(11, 21).length;
     console.log(`   Total tests: ${testCount}`);
     console.log(`   Correct predictions: ${correctPredictions}`);
     console.log(`   Accuracy: ${((correctPredictions / testCount) * 100).toFixed(1)}%`);
