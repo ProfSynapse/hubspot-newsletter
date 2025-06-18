@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import axios from 'axios';
-import { Article } from '../database/sqlite';
+import { Article } from '../database/postgres';
 
 const axiosInstance = axios.create({
   timeout: 10000,

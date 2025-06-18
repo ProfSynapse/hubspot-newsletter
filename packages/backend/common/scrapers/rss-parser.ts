@@ -1,5 +1,5 @@
 import Parser from 'rss-parser';
-import { Article } from '../database/sqlite';
+import { Article } from '../database/postgres';
 
 const parser = new Parser({
   customFields: {
