@@ -5,12 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: {
+    proxy: process.env.NODE_ENV === 'development' ? {
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       }
-    }
+    } : undefined
   },
   build: {
     outDir: 'dist',
