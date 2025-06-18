@@ -48,14 +48,25 @@ interface GeneratedNewsletter {
 }
 
 function createNewsletterPrompt(articles: Article[]): string {
-  const articlesContext = articles.map((article, index) => 
-    `Article ${index + 1}:
+  const articlesContext = articles.map((article, index) => {
+    let context = `Article ${index + 1}:
     Title: ${article.title}
     Source: ${article.source}
     URL: ${article.url}
     Content: ${article.content || article.excerpt || 'Content not available'}
-    Published: ${article.published_at}`
-  ).join('\n\n');
+    Published: ${article.published_at}`;
+    
+    if (article.images && article.images.length > 0) {
+      context += `
+    Available Images:`;
+      article.images.forEach((img, imgIndex) => {
+        context += `
+      - Image ${imgIndex + 1}: ${img.url}${img.alt ? ` (Alt: ${img.alt})` : ''}`;
+      });
+    }
+    
+    return context;
+  }).join('\n\n');
 
   return `You are a newsletter writer for The Hustle. Create a personalized newsletter based on the user's interests and today's news.
 
@@ -77,7 +88,7 @@ THE HUSTLE'S STYLE:
 STRUCTURE:
 1. FIRST: Analyze the articles and identify a connecting theme
 2. Thematic intro (no heading) - sets up the big picture story
-3. OPTIONAL: Include a featured image if you can infer a relevant image URL from article content (company logos, product photos, charts, etc.)
+3. OPTIONAL: Include a featured image using ONLY one of the provided image URLs from the articles (do not create or infer URLs)
 4. 3-4 themed sections with headings that explore different angles
 5. Mix paragraphs and bullet points naturally - flexible ordering
 6. Hyperlink key phrases to source articles naturally in text

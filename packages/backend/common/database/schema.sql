@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS articles (
   author TEXT,
   published_at DATETIME,
   category TEXT,
-  scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  scraped_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  images TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_published ON articles(published_at);

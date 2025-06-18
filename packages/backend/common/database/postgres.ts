@@ -79,6 +79,12 @@ export async function initializeDatabase(): Promise<void> {
   }
 }
 
+export interface ArticleImage {
+  url: string;
+  alt?: string;
+  caption?: string;
+}
+
 export interface Article {
   id?: number;
   title: string;
@@ -90,12 +96,13 @@ export interface Article {
   published_at?: string;
   category?: string;
   scraped_at?: string;
+  images?: ArticleImage[];
 }
 
 export async function insertArticle(article: Article): Promise<void> {
   const insertQuery = `
-    INSERT INTO articles (title, content, excerpt, source, url, author, published_at, category)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    INSERT INTO articles (title, content, excerpt, source, url, author, published_at, category, images)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     ON CONFLICT (url) DO NOTHING
   `;
   
@@ -107,7 +114,8 @@ export async function insertArticle(article: Article): Promise<void> {
     article.url,
     article.author,
     article.published_at,
-    article.category
+    article.category,
+    article.images ? JSON.stringify(article.images) : null
   ]);
 }
 
@@ -120,7 +128,10 @@ export async function getRecentArticles(hours: number = 24): Promise<Article[]> 
   `;
   
   const result = await query(selectQuery);
-  return result.rows;
+  return result.rows.map((row: any) => ({
+    ...row,
+    images: row.images ? JSON.parse(row.images) : []
+  }));
 }
 
 // Legacy function - no longer used since we removed keyword search
@@ -135,7 +146,10 @@ export async function searchArticles(searchQuery: string): Promise<Article[]> {
   
   const searchTerm = `%${searchQuery}%`;
   const result = await query(selectQuery, [searchTerm]);
-  return result.rows;
+  return result.rows.map((row: any) => ({
+    ...row,
+    images: row.images ? JSON.parse(row.images) : []
+  }));
 }
 
 export async function getArticlesByIds(ids: number[]): Promise<Article[]> {
@@ -151,7 +165,10 @@ export async function getArticlesByIds(ids: number[]): Promise<Article[]> {
   `;
   
   const result = await query(selectQuery, ids);
-  return result.rows;
+  return result.rows.map((row: any) => ({
+    ...row,
+    images: row.images ? JSON.parse(row.images) : []
+  }));
 }
 
 export async function cleanOldArticles(days: number = 7): Promise<void> {
