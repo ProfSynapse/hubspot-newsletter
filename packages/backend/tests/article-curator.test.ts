@@ -83,31 +83,26 @@ describe('Article Curator', () => {
   ];
 
   describe('curateArticles', () => {
-    test('should return empty array for no articles', async () => {
+    test('should return no relevant articles for empty array', async () => {
       const result = await curateArticles('AI', []);
-      expect(result).toEqual([]);
-    });
-
-    test('should return all article IDs when 6 or fewer articles', async () => {
-      const limitedArticles = mockArticles.slice(0, 5);
-      const result = await curateArticles('AI', limitedArticles);
-      const expectedIds = limitedArticles.map(article => article.id!);
-      
-      expect(result.length).toBe(5);
-      expect(result.sort()).toEqual(expectedIds.sort());
+      expect(result.hasRelevantArticles).toBe(false);
+      expect(result.articleIds).toEqual([]);
+      expect(result.reasoning).toBeTruthy();
     });
 
     test('should curate AI-related articles', async () => {
       // This test will actually call the OpenAI API
       const result = await curateArticles('artificial intelligence and machine learning', mockArticles);
       
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBeLessThanOrEqual(6);
+      expect(result.hasRelevantArticles).toBe(true);
+      expect(Array.isArray(result.articleIds)).toBe(true);
+      expect(result.articleIds.length).toBeGreaterThan(0);
+      expect(result.articleIds.length).toBeLessThanOrEqual(6);
+      expect(result.reasoning).toBeTruthy();
       
       // Verify all returned IDs exist in the original articles
       const originalIds = mockArticles.map(article => article.id!);
-      result.forEach(id => {
+      result.articleIds.forEach((id: number) => {
         expect(originalIds).toContain(id);
       });
       
@@ -116,7 +111,7 @@ describe('Article Curator', () => {
         .filter(article => article.category === 'AI' || article.title.toLowerCase().includes('ai') || (article.content && article.content.toLowerCase().includes('artificial intelligence')))
         .map(article => article.id!);
       
-      const selectedAiArticles = result.filter(id => aiArticleIds.includes(id));
+      const selectedAiArticles = result.articleIds.filter((id: number) => aiArticleIds.includes(id));
       expect(selectedAiArticles.length).toBeGreaterThan(0);
     }, 30000); // Allow time for AI API call
 
@@ -124,13 +119,15 @@ describe('Article Curator', () => {
       // This test will actually call the OpenAI API
       const result = await curateArticles('business and SaaS', mockArticles);
       
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBeLessThanOrEqual(6);
+      expect(result.hasRelevantArticles).toBe(true);
+      expect(Array.isArray(result.articleIds)).toBe(true);
+      expect(result.articleIds.length).toBeGreaterThan(0);
+      expect(result.articleIds.length).toBeLessThanOrEqual(6);
+      expect(result.reasoning).toBeTruthy();
       
       // Verify all returned IDs exist in the original articles
       const originalIds = mockArticles.map(article => article.id!);
-      result.forEach(id => {
+      result.articleIds.forEach((id: number) => {
         expect(originalIds).toContain(id);
       });
       
@@ -139,29 +136,27 @@ describe('Article Curator', () => {
         .filter(article => article.category === 'Business' || article.title.toLowerCase().includes('saas') || (article.content && article.content.toLowerCase().includes('business')))
         .map(article => article.id!);
       
-      const selectedBusinessArticles = result.filter(id => businessArticleIds.includes(id));
+      const selectedBusinessArticles = result.articleIds.filter((id: number) => businessArticleIds.includes(id));
       expect(selectedBusinessArticles.length).toBeGreaterThan(0);
     }, 30000); // Allow time for AI API call
 
-    test('should handle API errors gracefully and fallback', async () => {
-      // Test with invalid API key scenario by using a very specific query that might cause issues
-      const result = await curateArticles('extremely specific niche query that should trigger fallback', mockArticles);
+    test('should return no relevant articles for unrelated query', async () => {
+      // Test with a query that should have no relevant articles
+      const result = await curateArticles('quantum computing and underwater basket weaving', mockArticles);
       
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.length).toBeLessThanOrEqual(6);
-      
-      // Should return valid article IDs even in fallback
-      const originalIds = mockArticles.map(article => article.id!);
-      result.forEach(id => {
-        expect(originalIds).toContain(id);
-      });
+      // The AI should recognize no articles are relevant
+      expect(result.hasRelevantArticles).toBe(false);
+      expect(result.articleIds).toEqual([]);
+      expect(result.reasoning).toBeTruthy();
+      expect(result.reasoning.toLowerCase()).toContain('no');
     }, 30000);
 
     test('should respect the 6 article limit', async () => {
       const result = await curateArticles('technology', mockArticles);
       
-      expect(result.length).toBeLessThanOrEqual(6);
+      if (result.hasRelevantArticles) {
+        expect(result.articleIds.length).toBeLessThanOrEqual(6);
+      }
     }, 30000);
 
     test('should handle articles without content gracefully', async () => {
@@ -172,8 +167,10 @@ describe('Article Curator', () => {
       
       const result = await curateArticles('AI', articlesWithoutContent);
       
-      expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
+      // Should still work with excerpts
+      expect(result.hasRelevantArticles).toBe(true);
+      expect(Array.isArray(result.articleIds)).toBe(true);
+      expect(result.articleIds.length).toBeGreaterThan(0);
     }, 30000);
   });
 });
