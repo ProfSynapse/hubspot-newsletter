@@ -128,7 +128,7 @@ export async function searchArticles(searchQuery: string): Promise<Article[]> {
     WHERE (title ILIKE $1 OR content ILIKE $1 OR excerpt ILIKE $1)
     AND scraped_at > NOW() - INTERVAL '48 hours'
     ORDER BY published_at DESC
-    LIMIT 20
+    LIMIT 100
   `;
   
   const searchTerm = `%${searchQuery}%`;

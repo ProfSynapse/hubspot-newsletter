@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-2.5-flash';
+const MODEL = 'anthropic/claude-sonnet-4';
 
 interface ContentBlock {
   type: 'paragraph' | 'bulletList';
