@@ -31,10 +31,17 @@ interface Theming {
   angle: string;
 }
 
+interface FeaturedImage {
+  url: string;
+  caption: string;
+  source: string;
+}
+
 interface GeneratedNewsletter {
   subject: string;
   theming: Theming;
   thematicIntro: string;
+  featuredImage?: FeaturedImage;
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;
@@ -70,10 +77,11 @@ THE HUSTLE'S STYLE:
 STRUCTURE:
 1. FIRST: Analyze the articles and identify a connecting theme
 2. Thematic intro (no heading) - sets up the big picture story
-3. 3-4 themed sections with headings that explore different angles
-4. Mix paragraphs and bullet points naturally - flexible ordering
-5. Hyperlink key phrases to source articles naturally in text
-6. Actionable business advice that's specific and practical
+3. OPTIONAL: Include a featured image if you can infer a relevant image URL from article content (company logos, product photos, charts, etc.)
+4. 3-4 themed sections with headings that explore different angles
+5. Mix paragraphs and bullet points naturally - flexible ordering
+6. Hyperlink key phrases to source articles naturally in text
+7. Actionable business advice that's specific and practical
 
 CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text.
 
@@ -86,6 +94,11 @@ Generate a JSON response with this structure:
     "angle": "Your perspective (skeptical, optimistic, urgent, etc.)"
   },
   "thematicIntro": "Theme-setting introduction with no heading",
+  "featuredImage": {
+    "url": "https://example.com/image.jpg",
+    "caption": "Descriptive caption for the image",
+    "source": "Source article title or publication"
+  },
   "sections": [
     {
       "heading": "Section heading (often a question)",
@@ -107,7 +120,7 @@ Generate a JSON response with this structure:
       ]
     }
   ],
-  "actionableAdvice": "Your move: specific business advice",
+  "actionableAdvice": "specific business advice (no 'Your move:' prefix)",
   "signoff": "Newsletter closing"
 }
 
@@ -122,6 +135,11 @@ Example 1 - Smart Glasses Theme:
     "angle": "Cautiously optimistic - acknowledge failures but highlight genuine improvements"
   },
   "thematicIntro": "For years, smart glasses have been little more than a joke, with Google Glass being the category's most infamous failure. And yet, Big Tech hasn't given up. Google, Meta, and Snap are all back at the same well, while Apple is rumored to be working on its own model for a 2026 release.",
+  "featuredImage": {
+    "url": "https://techcrunch.com/wp-content/uploads/2024/smart-glasses-comparison.jpg",
+    "caption": "Several pairs of smart glasses on a blue and gray background showing the evolution from Google Glass to modern designs",
+    "source": "TechCrunch"
+  },
   "sections": [
     {
       "heading": "Why now?",
@@ -212,6 +230,26 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                   type: 'string',
                   description: 'Theme-setting introduction with no heading'
                 },
+                featuredImage: {
+                  type: 'object',
+                  description: 'Optional featured image from one of the articles',
+                  properties: {
+                    url: {
+                      type: 'string',
+                      description: 'Direct URL to the image'
+                    },
+                    caption: {
+                      type: 'string',
+                      description: 'Descriptive caption for the image'
+                    },
+                    source: {
+                      type: 'string',
+                      description: 'Source article title or publication name'
+                    }
+                  },
+                  required: ['url', 'caption', 'source'],
+                  additionalProperties: false
+                },
                 sections: {
                   type: 'array',
                   description: 'Array of newsletter sections',
@@ -275,7 +313,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                 },
                 actionableAdvice: {
                   type: 'string',
-                  description: 'Your move: specific actionable advice'
+                  description: 'Specific actionable advice (no "Your move:" prefix needed)'
                 },
                 signoff: {
                   type: 'string',
@@ -320,6 +358,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         angle: 'Informational - basic coverage of recent developments'
       },
       thematicIntro: "Here's what we found on your topic:",
+      featuredImage: undefined,
       sections: articles.slice(0, 3).map((article, index) => ({
         heading: article.title,
         contentBlocks: [

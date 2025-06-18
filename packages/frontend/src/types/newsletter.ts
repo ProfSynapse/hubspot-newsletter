@@ -21,10 +21,17 @@ export interface Theming {
   angle: string;
 }
 
+export interface FeaturedImage {
+  url: string;
+  caption: string;
+  source: string;
+}
+
 export interface Newsletter {
   subject: string;
   theming: Theming;
   thematicIntro: string;
+  featuredImage?: FeaturedImage;
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;

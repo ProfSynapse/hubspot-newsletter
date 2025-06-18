@@ -47,15 +47,11 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
         h1 { color: #ea580c; border-bottom: 2px solid #fed7aa; padding-bottom: 10px; font-size: 2.2em; }
         h2 { color: #9a3412; margin-top: 30px; font-size: 1.5em; }
         h3 { color: #7c2d12; margin-top: 25px; font-size: 1.2em; }
-        .theming { background: #f8fafc; padding: 15px; border-left: 4px solid #ea580c; margin: 20px 0; font-style: italic; }
         .intro { font-size: 1.1em; color: #4b5563; margin: 20px 0; }
         .section { margin: 25px 0; }
         .content-block { margin: 15px 0; }
         .bullet-list { margin: 10px 0 20px 20px; }
         .bullet-list li { margin: 8px 0; }
-        .sources { background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; margin: 15px 0; font-size: 0.9em; border-radius: 5px; }
-        .sources a { color: #2563eb; text-decoration: none; }
-        .sources a:hover { text-decoration: underline; }
         .signoff { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-style: italic; }
         a { color: #2563eb; text-decoration: underline; }
         a:hover { color: #1d4ed8; }
@@ -64,11 +60,16 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
 <body>
     <h1>${newsletter.subject}</h1>
     
-    <div class="theming">
-        <strong>Theme:</strong> ${newsletter.theming.overallTheme}
-    </div>
-    
     <div class="intro">${newsletter.thematicIntro}</div>
+    
+    ${newsletter.featuredImage ? `
+    <div class="featured-image" style="margin: 20px 0; text-align: center;">
+        <img src="${newsletter.featuredImage.url}" alt="${newsletter.featuredImage.caption}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <p style="font-size: 0.9em; color: #6b7280; margin-top: 8px; font-style: italic;">
+            ${newsletter.featuredImage.caption} - ${newsletter.featuredImage.source}
+        </p>
+    </div>
+    ` : ''}
     
     ${newsletter.sections.map(section => `
     <div class="section">
@@ -87,15 +88,6 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
           }
           return '';
         }).join('')}
-        
-        ${section.hyperlinks && section.hyperlinks.length > 0 ? `
-        <div class="sources">
-            <strong>Sources:</strong>
-            <ul>
-                ${section.hyperlinks.map(link => `<li><a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.linkText}</a></li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
     </div>
     `).join('')}
     
@@ -123,25 +115,34 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
       if (line.startsWith('# ')) {
         return <h1 key={index} className="text-2xl font-bold text-gray-900 mb-4">{line.slice(2)}</h1>;
       }
+      if (line.startsWith('![') && line.includes('](')) {
+        // Handle markdown images
+        const match = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+        if (match) {
+          const [, alt, src] = match;
+          return (
+            <div key={index} className="my-6 text-center">
+              <img 
+                src={src} 
+                alt={alt} 
+                className="max-w-full h-auto rounded-lg shadow-md mx-auto"
+                style={{ maxHeight: '400px' }}
+              />
+            </div>
+          );
+        }
+      }
+      if (line.startsWith('*') && line.endsWith('*') && line.includes(' - ')) {
+        // Handle image captions
+        const captionText = line.slice(1, -1); // Remove asterisks
+        return (
+          <p key={index} className="text-sm text-gray-600 italic text-center mb-4">
+            {captionText}
+          </p>
+        );
+      }
       if (line.startsWith('## ')) {
         return <h2 key={index} className="text-xl font-semibold text-gray-900 mt-6 mb-3">{line.slice(3)}</h2>;
-      }
-      if (line.startsWith('**Theme:**')) {
-        const text = line.slice(10); // Remove "**Theme:**"
-        return (
-          <div key={index} className="bg-orange-50 border-l-4 border-orange-200 p-4 mb-4">
-            <p className="text-orange-800">
-              <strong className="font-semibold">Theme:</strong> {text}
-            </p>
-          </div>
-        );
-      }
-      if (line.startsWith('**Sources:**')) {
-        return (
-          <div key={index} className="mt-4 mb-2">
-            <strong className="text-gray-900 text-sm">Sources:</strong>
-          </div>
-        );
       }
       if (line.startsWith('**') && line.endsWith('**')) {
         return <p key={index} className="font-semibold text-gray-900 mb-2">{line.slice(2, -2)}</p>;
@@ -240,11 +241,14 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
   const formatNewsletter = () => {
     let content = `# 🔥 ${newsletter.subject}\n\n`;
     
-    // Theming strategy (optional debug info)
-    content += `**Theme:** ${newsletter.theming.overallTheme}\n\n`;
-    
     // Thematic intro
     content += `${newsletter.thematicIntro}\n\n`;
+    
+    // Featured image (if exists)
+    if (newsletter.featuredImage) {
+      content += `![${newsletter.featuredImage.caption}](${newsletter.featuredImage.url})\n`;
+      content += `*${newsletter.featuredImage.caption}* - ${newsletter.featuredImage.source}\n\n`;
+    }
     
     // Sections
     newsletter.sections.forEach((section) => {
@@ -262,15 +266,6 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
           content += `\n`;
         }
       });
-      
-      // Add sources if hyperlinks exist
-      if (section.hyperlinks && section.hyperlinks.length > 0) {
-        content += `**Sources:**\n`;
-        section.hyperlinks.forEach(link => {
-          content += `• [${link.linkText}](${link.url})\n`;
-        });
-        content += `\n`;
-      }
     });
     
     content += `## Your Move\n\n`;
