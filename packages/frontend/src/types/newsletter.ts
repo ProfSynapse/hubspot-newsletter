@@ -3,6 +3,7 @@ export interface NewsletterSection {
   headline: string;
   content: string;
   whyItMatters: string;
+  urls: string[];
 }
 
 export interface Newsletter {
