@@ -11,22 +11,22 @@ const parser = new Parser({
 export const RSS_FEEDS = [
   // Tier 1: Core Business Sources (The Hustle Style Content)
   { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
-  { url: 'https://feeds.bloomberg.com/technology', source: 'Bloomberg Tech' },
+  { url: 'https://www.wired.com/feed/rss', source: 'Wired' },
   { url: 'https://www.theverge.com/rss/index.xml', source: 'The Verge' },
   { url: 'https://feeds.arstechnica.com/arstechnica/index', source: 'Ars Technica' },
   { url: 'https://hnrss.org/frontpage', source: 'Hacker News' },
   { url: 'https://venturebeat.com/feed/', source: 'VentureBeat' },
   
   // Tier 2: Finance & Investment (Market Insights)
-  { url: 'https://feeds.finance.yahoo.com/rss/2.0/headline', source: 'Yahoo Finance' },
+  { url: 'https://finance.yahoo.com/news/rssindex', source: 'Yahoo Finance' },
   { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', source: 'CNBC Business' },
   { url: 'https://seekingalpha.com/feed.xml', source: 'Seeking Alpha' },
   { url: 'https://www.investing.com/rss/news.rss', source: 'Investing.com' },
   
   // Tier 3: Startup & Industry Focus (HubSpot Relevant)
   { url: 'https://www.marketingland.com/feed', source: 'Marketing Land' },
-  { url: 'https://feeds.inc.com/home/updates.rss', source: 'Inc.com' },
-  { url: 'https://hbr.org/feed', source: 'Harvard Business Review' },
+  { url: 'https://inc.com/rss', source: 'Inc.com' },
+  { url: 'http://feeds.hbr.org/harvardbusiness', source: 'Harvard Business Review' },
   { url: 'https://steveblank.com/feed', source: 'Steve Blank' },
   { url: 'https://feeds.feedburner.com/thenextweb', source: 'The Next Web' }
 ];
