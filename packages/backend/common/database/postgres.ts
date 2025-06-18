@@ -116,7 +116,7 @@ export async function getRecentArticles(hours: number = 24): Promise<Article[]> 
     SELECT * FROM articles 
     WHERE scraped_at > NOW() - INTERVAL '${hours} hours'
     ORDER BY published_at DESC
-    LIMIT 300
+    LIMIT 500
   `;
   
   const result = await query(selectQuery);
