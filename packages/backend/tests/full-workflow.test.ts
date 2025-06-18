@@ -153,7 +153,8 @@ describe('Full Two-Phase Newsletter Workflow with Real Data', () => {
       // Verify newsletter structure
       const newsletter = generationResponse.body.newsletter;
       expect(newsletter.subject).toBeDefined();
-      expect(newsletter.intro).toBeDefined();
+      expect(newsletter.theming).toBeDefined();
+      expect(newsletter.thematicIntro).toBeDefined();
       expect(newsletter.sections).toBeDefined();
       expect(newsletter.actionableAdvice).toBeDefined();
       expect(newsletter.signoff).toBeDefined();
@@ -162,17 +163,17 @@ describe('Full Two-Phase Newsletter Workflow with Real Data', () => {
 
       // Verify newsletter sections have proper structure
       newsletter.sections.forEach((section: any, index: number) => {
-        expect(section.emoji).toBeDefined();
-        expect(section.headline).toBeDefined();
-        expect(section.content).toBeDefined();
-        expect(section.whyItMatters).toBeDefined();
-        expect(Array.isArray(section.urls)).toBe(true);
+        expect(section.heading).toBeDefined();
+        expect(section.contentBlocks).toBeDefined();
+        expect(section.hyperlinks).toBeDefined();
+        expect(Array.isArray(section.contentBlocks)).toBe(true);
+        expect(Array.isArray(section.hyperlinks)).toBe(true);
         
-        console.log(`Section ${index + 1}: ${section.emoji} ${section.headline}`);
+        console.log(`Section ${index + 1}: ${section.heading}`);
       });
 
       // Verify newsletter content relates to AI/Technology
-      const newsletterText = `${newsletter.subject} ${newsletter.intro} ${newsletter.sections.map((s: any) => s.content).join(' ')}`.toLowerCase();
+      const newsletterText = `${newsletter.subject} ${newsletter.thematicIntro} ${newsletter.sections.map((s: any) => s.contentBlocks.map((b: any) => b.content || '').join(' ')).join(' ')}`.toLowerCase();
       const aiKeywords = ['ai', 'artificial intelligence', 'machine learning', 'technology', 'tech', 'algorithm', 'data'];
       const hasAiContent = aiKeywords.some(keyword => newsletterText.includes(keyword));
       
@@ -261,11 +262,11 @@ describe('Full Two-Phase Newsletter Workflow with Real Data', () => {
       expect(newsletter.sections.length).toBeGreaterThan(0);
       // Verify sections have the required structure
       newsletter.sections.forEach((section: any) => {
-        expect(section.emoji).toBeDefined(); // Should have emoji property
-        expect(section.headline).toBeDefined();
-        expect(section.content).toBeDefined();
-        expect(section.whyItMatters).toBeDefined();
-        expect(Array.isArray(section.urls)).toBe(true);
+        expect(section.heading).toBeDefined(); // Should have heading property
+        expect(section.contentBlocks).toBeDefined();
+        expect(section.hyperlinks).toBeDefined();
+        expect(Array.isArray(section.contentBlocks)).toBe(true);
+        expect(Array.isArray(section.hyperlinks)).toBe(true);
       });
       expect(newsletter.actionableAdvice).toMatch(/your move/i); // Should contain "Your move:" style advice
       

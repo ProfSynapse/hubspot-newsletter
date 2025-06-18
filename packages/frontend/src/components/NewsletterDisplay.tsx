@@ -26,6 +26,15 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
   };
 
   const exportToHTML = () => {
+    const processHyperlinksToHTML = (text: string, hyperlinks: any[]) => {
+      let processedText = text;
+      hyperlinks.forEach(link => {
+        const linkHTML = `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.linkText}</a>`;
+        processedText = processedText.replace(link.linkText, linkHTML);
+      });
+      return processedText;
+    };
+
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -34,49 +43,67 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${newsletter.subject}</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
-        h1 { color: #ea580c; border-bottom: 2px solid #fed7aa; padding-bottom: 10px; }
-        h2 { color: #9a3412; margin-top: 30px; }
-        .section { margin: 20px 0; }
-        .why-matters { margin: 10px 0; }
-        .sources { background: #f9fafb; padding: 10px; border: 1px solid #e5e7eb; margin: 10px 0; font-size: 0.9em; }
+        body { font-family: Georgia, serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333; }
+        h1 { color: #ea580c; border-bottom: 2px solid #fed7aa; padding-bottom: 10px; font-size: 2.2em; }
+        h2 { color: #9a3412; margin-top: 30px; font-size: 1.5em; }
+        h3 { color: #7c2d12; margin-top: 25px; font-size: 1.2em; }
+        .theming { background: #f8fafc; padding: 15px; border-left: 4px solid #ea580c; margin: 20px 0; font-style: italic; }
+        .intro { font-size: 1.1em; color: #4b5563; margin: 20px 0; }
+        .section { margin: 25px 0; }
+        .content-block { margin: 15px 0; }
+        .bullet-list { margin: 10px 0 20px 20px; }
+        .bullet-list li { margin: 8px 0; }
+        .sources { background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; margin: 15px 0; font-size: 0.9em; border-radius: 5px; }
         .sources a { color: #2563eb; text-decoration: none; }
         .sources a:hover { text-decoration: underline; }
-        .intro { font-style: italic; color: #6b7280; }
-        .signoff { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-        ul { padding-left: 20px; }
-        li { margin: 5px 0; }
+        .signoff { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-style: italic; }
+        a { color: #2563eb; text-decoration: underline; }
+        a:hover { color: #1d4ed8; }
     </style>
 </head>
 <body>
-    <h1>🔥 ${newsletter.subject}</h1>
-    <p class="intro">${newsletter.intro}</p>
+    <h1>${newsletter.subject}</h1>
     
-    <h2>The Big Stories (That Actually Matter)</h2>
+    <div class="theming">
+        <strong>Theme:</strong> ${newsletter.theming.overallTheme}
+    </div>
     
-    ${newsletter.sections.map((section, index) => `
+    <div class="intro">${newsletter.thematicIntro}</div>
+    
+    ${newsletter.sections.map(section => `
     <div class="section">
-        <h3>${section.emoji} Story #${index + 1}: ${section.headline}</h3>
-        <p>${section.content}</p>
-        <div class="why-matters">
-            <strong>Why it Matters:</strong> ${section.whyItMatters.replace(/\*([^*]+)\*/g, '$1')}
-        </div>
-        ${section.urls && section.urls.length > 0 ? `
+        <h2>${section.heading}</h2>
+        
+        ${section.contentBlocks.map(block => {
+          if (block.type === 'paragraph' && block.content) {
+            const processedContent = processHyperlinksToHTML(block.content, section.hyperlinks);
+            return `<div class="content-block"><p>${processedContent}</p></div>`;
+          } else if (block.type === 'bulletList' && block.items) {
+            const processedItems = block.items.map(item => {
+              const processedItem = processHyperlinksToHTML(item, section.hyperlinks);
+              return `<li>${processedItem}</li>`;
+            }).join('');
+            return `<div class="content-block"><ul class="bullet-list">${processedItems}</ul></div>`;
+          }
+          return '';
+        }).join('')}
+        
+        ${section.hyperlinks && section.hyperlinks.length > 0 ? `
         <div class="sources">
             <strong>Sources:</strong>
             <ul>
-                ${section.urls.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('')}
+                ${section.hyperlinks.map(link => `<li><a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.linkText}</a></li>`).join('')}
             </ul>
         </div>
         ` : ''}
     </div>
     `).join('')}
     
-    <h2>Why This Matters for Your Business</h2>
+    <h2>Your Move</h2>
     <p>${newsletter.actionableAdvice}</p>
     
     <div class="signoff">
-        ${newsletter.signoff}
+        ${newsletter.signoff.replace(/\n/g, '<br>')}
     </div>
 </body>
 </html>`;
@@ -99,41 +126,58 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
       if (line.startsWith('## ')) {
         return <h2 key={index} className="text-xl font-semibold text-gray-900 mt-6 mb-3">{line.slice(3)}</h2>;
       }
-      if (line.startsWith('WHYITMATTERS:')) {
-        const text = line.slice(13); // Remove "WHYITMATTERS:"
+      if (line.startsWith('**Theme:**')) {
+        const text = line.slice(10); // Remove "**Theme:**"
         return (
-          <p key={index} className="text-gray-700 mb-3 leading-relaxed">
-            <strong className="font-semibold text-gray-900">Why it Matters</strong>: {text}
-          </p>
+          <div key={index} className="bg-orange-50 border-l-4 border-orange-200 p-4 mb-4">
+            <p className="text-orange-800">
+              <strong className="font-semibold">Theme:</strong> {text}
+            </p>
+          </div>
+        );
+      }
+      if (line.startsWith('**Sources:**')) {
+        return (
+          <div key={index} className="mt-4 mb-2">
+            <strong className="text-gray-900 text-sm">Sources:</strong>
+          </div>
         );
       }
       if (line.startsWith('**') && line.endsWith('**')) {
         return <p key={index} className="font-semibold text-gray-900 mb-2">{line.slice(2, -2)}</p>;
       }
-      if (line.startsWith('*') && line.endsWith('*')) {
-        return <p key={index} className="text-gray-600 text-sm italic border-l-4 border-orange-200 pl-4 my-4">{line.slice(1, -1)}</p>;
-      }
-      if (line.startsWith('SOURCES:')) {
-        const sourcesText = line.slice(8); // Remove "SOURCES:"
-        const urls = sourcesText.split('|');
+      if (line.startsWith('• ')) {
+        // Handle markdown links in bullet points
+        const bulletText = line.slice(2);
+        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+        const parts = bulletText.split(linkRegex);
+        
         return (
-          <blockquote key={index} className="text-gray-600 text-sm border-l-4 border-gray-300 pl-4 my-4 bg-gray-50 py-2">
-            <strong>Sources:</strong>
-            <ul className="list-disc list-inside mt-1">
-              {urls.map((url, urlIndex) => (
-                <li key={urlIndex}>
+          <li key={index} className="text-gray-700 mb-2 ml-6 list-disc">
+            {parts.map((part, partIndex) => {
+              if (partIndex % 3 === 1) {
+                // This is link text
+                return null;
+              } else if (partIndex % 3 === 2) {
+                // This is the URL, create link with previous part as text
+                const linkText = parts[partIndex - 1];
+                return (
                   <a 
-                    href={url.trim()} 
+                    key={partIndex}
+                    href={part} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
-                    {url.trim()}
+                    {linkText}
                   </a>
-                </li>
-              ))}
-            </ul>
-          </blockquote>
+                );
+              } else {
+                // Regular text
+                return <span key={partIndex}>{part}</span>;
+              }
+            })}
+          </li>
         );
       }
       if (line.startsWith('> ')) {
@@ -145,25 +189,91 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
       if (line.startsWith('---')) {
         return <hr key={index} className="my-6 border-gray-200" />;
       }
+      
+      // Handle paragraphs with markdown links
+      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      const parts = line.split(linkRegex);
+      
+      if (parts.length > 1) {
+        return (
+          <p key={index} className="text-gray-700 mb-3 leading-relaxed">
+            {parts.map((part, partIndex) => {
+              if (partIndex % 3 === 1) {
+                // This is link text
+                return null;
+              } else if (partIndex % 3 === 2) {
+                // This is the URL, create link with previous part as text
+                const linkText = parts[partIndex - 1];
+                return (
+                  <a 
+                    key={partIndex}
+                    href={part} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    {linkText}
+                  </a>
+                );
+              } else {
+                // Regular text
+                return <span key={partIndex}>{part}</span>;
+              }
+            })}
+          </p>
+        );
+      }
+      
       return <p key={index} className="text-gray-700 mb-3 leading-relaxed">{line}</p>;
     });
   };
 
+  const processHyperlinks = (text: string, hyperlinks: any[]) => {
+    let processedText = text;
+    hyperlinks.forEach(link => {
+      const linkMarkdown = `[${link.linkText}](${link.url})`;
+      processedText = processedText.replace(link.linkText, linkMarkdown);
+    });
+    return processedText;
+  };
+
   const formatNewsletter = () => {
     let content = `# 🔥 ${newsletter.subject}\n\n`;
-    content += `${newsletter.intro}\n\n`;
-    content += `## The Big Stories (That Actually Matter)\n\n`;
     
-    newsletter.sections.forEach((section, index) => {
-      content += `**${section.emoji} Story #${index + 1}: ${section.headline}**\n`;
-      content += `${section.content}\n\n`;
-      content += `WHYITMATTERS:${section.whyItMatters}\n\n`;
-      if (section.urls && section.urls.length > 0) {
-        content += `SOURCES:${section.urls.join('|')}\n\n`;
+    // Theming strategy (optional debug info)
+    content += `**Theme:** ${newsletter.theming.overallTheme}\n\n`;
+    
+    // Thematic intro
+    content += `${newsletter.thematicIntro}\n\n`;
+    
+    // Sections
+    newsletter.sections.forEach((section) => {
+      content += `## ${section.heading}\n\n`;
+      
+      section.contentBlocks.forEach(block => {
+        if (block.type === 'paragraph' && block.content) {
+          const processedContent = processHyperlinks(block.content, section.hyperlinks);
+          content += `${processedContent}\n\n`;
+        } else if (block.type === 'bulletList' && block.items) {
+          block.items.forEach(item => {
+            const processedItem = processHyperlinks(item, section.hyperlinks);
+            content += `• ${processedItem}\n`;
+          });
+          content += `\n`;
+        }
+      });
+      
+      // Add sources if hyperlinks exist
+      if (section.hyperlinks && section.hyperlinks.length > 0) {
+        content += `**Sources:**\n`;
+        section.hyperlinks.forEach(link => {
+          content += `• [${link.linkText}](${link.url})\n`;
+        });
+        content += `\n`;
       }
     });
     
-    content += `## Why This Matters for Your Business\n\n`;
+    content += `## Your Move\n\n`;
     content += `${newsletter.actionableAdvice}\n\n`;
     content += `---\n${newsletter.signoff}`;
     

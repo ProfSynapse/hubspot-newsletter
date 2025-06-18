@@ -32,13 +32,18 @@ describe('Newsletter Generator', () => {
     const newsletter = await generateNewsletter(query, sampleArticles);
     
     expect(newsletter).toHaveProperty('subject');
-    expect(newsletter).toHaveProperty('intro');
+    expect(newsletter).toHaveProperty('theming');
+    expect(newsletter).toHaveProperty('thematicIntro');
     expect(newsletter).toHaveProperty('sections');
     expect(newsletter).toHaveProperty('actionableAdvice');
     expect(newsletter).toHaveProperty('signoff');
     
     expect(typeof newsletter.subject).toBe('string');
     expect(newsletter.subject.length).toBeGreaterThan(0);
+    
+    expect(newsletter.theming).toHaveProperty('overallTheme');
+    expect(newsletter.theming).toHaveProperty('strategy');
+    expect(newsletter.theming).toHaveProperty('angle');
     
     expect(Array.isArray(newsletter.sections)).toBe(true);
     expect(newsletter.sections.length).toBeGreaterThan(0);
@@ -77,15 +82,33 @@ describe('Newsletter Generator', () => {
     const newsletter = await generateNewsletter('business automation', sampleArticles);
     
     newsletter.sections.forEach(section => {
-      expect(section).toHaveProperty('emoji');
-      expect(section).toHaveProperty('headline');
-      expect(section).toHaveProperty('content');
-      expect(section).toHaveProperty('whyItMatters');
+      expect(section).toHaveProperty('heading');
+      expect(section).toHaveProperty('contentBlocks');
+      expect(section).toHaveProperty('hyperlinks');
       
-      expect(typeof section.emoji).toBe('string');
-      expect(typeof section.headline).toBe('string');
-      expect(typeof section.content).toBe('string');
-      expect(typeof section.whyItMatters).toBe('string');
+      expect(typeof section.heading).toBe('string');
+      expect(Array.isArray(section.contentBlocks)).toBe(true);
+      expect(Array.isArray(section.hyperlinks)).toBe(true);
+      
+      section.contentBlocks.forEach(block => {
+        expect(block).toHaveProperty('type');
+        expect(['paragraph', 'bulletList']).toContain(block.type);
+        
+        if (block.type === 'paragraph') {
+          expect(block).toHaveProperty('content');
+          expect(typeof block.content).toBe('string');
+        } else if (block.type === 'bulletList') {
+          expect(block).toHaveProperty('items');
+          expect(Array.isArray(block.items)).toBe(true);
+        }
+      });
+      
+      section.hyperlinks.forEach(link => {
+        expect(link).toHaveProperty('linkText');
+        expect(link).toHaveProperty('url');
+        expect(typeof link.linkText).toBe('string');
+        expect(typeof link.url).toBe('string');
+      });
     });
   }, 30000);
 

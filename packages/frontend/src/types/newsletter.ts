@@ -1,14 +1,30 @@
+export interface ContentBlock {
+  type: 'paragraph' | 'bulletList';
+  content?: string;
+  items?: string[];
+}
+
+export interface Hyperlink {
+  linkText: string;
+  url: string;
+}
+
 export interface NewsletterSection {
-  emoji: string;
-  headline: string;
-  content: string;
-  whyItMatters: string;
-  urls: string[];
+  heading: string;
+  contentBlocks: ContentBlock[];
+  hyperlinks: Hyperlink[];
+}
+
+export interface Theming {
+  overallTheme: string;
+  strategy: string;
+  angle: string;
 }
 
 export interface Newsletter {
   subject: string;
-  intro: string;
+  theming: Theming;
+  thematicIntro: string;
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;

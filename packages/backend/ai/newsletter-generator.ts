@@ -8,17 +8,33 @@ dotenv.config();
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'google/gemini-2.5-flash';
 
+interface ContentBlock {
+  type: 'paragraph' | 'bulletList';
+  content?: string;
+  items?: string[];
+}
+
+interface Hyperlink {
+  linkText: string;
+  url: string;
+}
+
 interface NewsletterSection {
-  emoji: string;
-  headline: string;
-  content: string;
-  whyItMatters: string;
-  urls: string[];
+  heading: string;
+  contentBlocks: ContentBlock[];
+  hyperlinks: Hyperlink[];
+}
+
+interface Theming {
+  overallTheme: string;
+  strategy: string;
+  angle: string;
 }
 
 interface GeneratedNewsletter {
   subject: string;
-  intro: string;
+  theming: Theming;
+  thematicIntro: string;
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;
@@ -40,70 +56,103 @@ function createNewsletterPrompt(articles: Article[]): string {
 ${articlesContext}
 </News>
 
-REQUIREMENTS:
-1. Write in The Hustle's signature style (conversational, witty, business-focused)
-2. Structure: subject line, brief intro, 3-4 key stories with analysis, actionable takeaway
+THE HUSTLE'S STYLE:
+- Conversational but informed ("For years, smart glasses have been little more than a joke")
+- Data-driven with specific numbers and examples
+- Balanced perspective - show pros AND cons, not just hype
+- Rhetorical questions as natural transitions ("Why now?", "Sound familiar?")
+- Practical business implications
+- Subtle skepticism mixed with genuine insight
+- Connect stories to broader themes, not just list headlines
+- Use phrases like "kinda nice", "pretty frustrating" for casual tone
+- Always explain business impact - "why it matters" thinking
 
-CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text. Use proper JSON syntax with commas (not semicolons).
+STRUCTURE:
+1. FIRST: Analyze the articles and identify a connecting theme
+2. Thematic intro (no heading) - sets up the big picture story
+3. 3-4 themed sections with headings that explore different angles
+4. Mix paragraphs and bullet points naturally - flexible ordering
+5. Hyperlink key phrases to source articles naturally in text
+6. Actionable business advice that's specific and practical
+
+CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text.
 
 Generate a JSON response with this structure:
 {
-  "subject": "Emoji then Newsletter subject line",
-  "intro": "Brief introduction",
+  "subject": "🤖 Theme-based subject line",
+  "theming": {
+    "overallTheme": "The big picture story connecting all articles",
+    "strategy": "How you'll connect the articles thematically",
+    "angle": "Your perspective (skeptical, optimistic, urgent, etc.)"
+  },
+  "thematicIntro": "Theme-setting introduction with no heading",
   "sections": [
     {
-      "emoji": "Relevant emoji",
-      "headline": "Story headline",
-      "content": "Story analysis (2-3 paragraphs)",
-      "whyItMatters": "Relevant business insight",
-      "urls": ["Source article URL 1", "Source article URL 2"]
+      "heading": "Section heading (often a question)",
+      "contentBlocks": [
+        {
+          "type": "paragraph",
+          "content": "Paragraph content here"
+        },
+        {
+          "type": "bulletList",
+          "items": ["Bullet point 1", "Bullet point 2"]
+        }
+      ],
+      "hyperlinks": [
+        {
+          "linkText": "exact text to hyperlink",
+          "url": "source article URL"
+        }
+      ]
     }
   ],
-  "actionableAdvice": "Your move: specific advice",
+  "actionableAdvice": "Your move: specific business advice",
   "signoff": "Newsletter closing"
 }
 
 EXAMPLE OUTPUTS:
 
-Example 1:
+Example 1 - Smart Glasses Theme:
 {
-  "subject": "🚀 AI Chips Hit Different This Week",
-  "intro": "The semiconductor game just got a lot more interesting. Here's what's moving the needle:",
+  "subject": "🤖 The Smart Glasses Comeback Nobody Expected",
+  "theming": {
+    "overallTheme": "Smart glasses industry's redemption arc - from Google Glass failure to AI-powered comeback",
+    "strategy": "Connect past failures with current AI advances and market timing. Show what's different this time while maintaining healthy skepticism",
+    "angle": "Cautiously optimistic - acknowledge failures but highlight genuine improvements"
+  },
+  "thematicIntro": "For years, smart glasses have been little more than a joke, with Google Glass being the category's most infamous failure. And yet, Big Tech hasn't given up. Google, Meta, and Snap are all back at the same well, while Apple is rumored to be working on its own model for a 2026 release.",
   "sections": [
     {
-      "emoji": "🔥",
-      "headline": "NVIDIA's New Blackwell Chips Are Already Sold Out",
-      "content": "NVIDIA just dropped their latest Blackwell architecture, and it's causing chaos in the best way possible. Major cloud providers are throwing elbows to get their hands on these chips, with some orders backed up until 2025. The performance gains are staggering — we're talking 4x faster training speeds compared to the previous generation.\\n\\nBut here's the kicker: the price tag matches the hype. A single Blackwell system can cost upwards of $200K, making this a rich company's game. Smaller AI startups are getting priced out, while Big Tech doubles down.",
-      "whyItMatters": "This chip shortage is creating a two-tier AI economy. Companies with deep pockets will dominate, while smaller players scramble for scraps or pivot to efficiency-focused strategies.",
-      "urls": ["https://techcrunch.com/nvidia-blackwell-sold-out", "https://reuters.com/nvidia-chip-shortage"]
-    },
-    {
-      "emoji": "💰", 
-      "headline": "OpenAI's Revenue Hits $3.4B Annually",
-      "content": "OpenAI just leaked their latest numbers, and they're eye-watering. The company is pulling in $3.4 billion annually, up from practically zero just two years ago. ChatGPT subscriptions are driving most of the revenue, but enterprise deals are the real goldmine.\\n\\nThe plot twist? They're still burning through cash faster than a crypto whale in 2021. Training costs, talent acquisition, and compute expenses are eating into margins. Profitability is still a distant dream, but investors don't seem to care.",
-      "whyItMatters": "OpenAI's revenue proves there's massive demand for AI tools, but their cash burn shows this market is still in hypergrowth mode. Expect more fundraising rounds and potential IPO discussions.",
-      "urls": ["https://bloomberg.com/openai-revenue-3-4-billion"]
+      "heading": "Why now?",
+      "contentBlocks": [
+        {
+          "type": "paragraph",
+          "content": "AI has significantly advanced since Google Glass. While we've seen AI-powered wearables like Humane's AI Pin fail, that's because, according to reviewers, they sucked. Wearables that actually provide a useful function, like fitness trackers, do well."
+        },
+        {
+          "type": "bulletList",
+          "items": [
+            "Google's Android XR prototype allows wearers to see pertinent info about their environment",
+            "Most importantly, they look like normal glasses (partnerships with Warby Parker and Gentle Monster)",
+            "Not conspicuous gadgetry that people will assuredly mock, as with Google Glass"
+          ]
+        }
+      ],
+      "hyperlinks": [
+        {
+          "linkText": "AI-powered wearables",
+          "url": "https://techcrunch.com/humane-ai-pin-review"
+        },
+        {
+          "linkText": "Humane's AI Pin",
+          "url": "https://humane.com/aipin"
+        }
+      ]
     }
   ],
-  "actionableAdvice": "Your move: If you're in tech, start budgeting for AI infrastructure now. Chip shortages mean longer lead times, and prices aren't coming down anytime soon.",
-  "signoff": "Keep innovating (and maybe start that AI chip fund),\n\nThe Hustle Team"
-}
-
-Example 2:
-{
-  "subject": "📊 The SaaS Shakedown Nobody Saw Coming",
-  "intro": "SaaS companies are having their 'come to Jesus' moment. Growth at all costs is dead, and profitability is the new black:",
-  "sections": [
-    {
-      "emoji": "🔥",
-      "headline": "Salesforce Cuts 10% of Workforce Despite Record Revenue",
-      "content": "Salesforce just pulled a classic 2024 move: record revenue, massive layoffs. The CRM giant reported $8.6B in quarterly revenue but axed 8,000+ employees anyway. CEO Marc Benioff says they're 'right-sizing for the current environment.'\\n\\nThis isn't about survival — it's about margins. Wall Street rewarded the decision with a 12% stock bump. The message is clear: growth without profitability is so 2021.",
-      "whyItMatters": "When profitable companies start cutting deep, it signals a fundamental shift in SaaS economics. Expect more 'right-sizing' across the industry as companies prioritize efficiency over expansion.",
-      "urls": ["https://salesforce.com/layoffs-announcement", "https://wsj.com/salesforce-workforce-reduction"]
-    }
-  ],
-  "actionableAdvice": "Your move: Audit your SaaS stack now. Consolidate tools, renegotiate contracts, and focus on ROI metrics. The free lunch is officially over.",
-  "signoff": "Stay profitable out there,\n\nThe Hustle Team"
+  "actionableAdvice": "Your move: Overall adoption will likely come down to price, usefulness, battery life, and fashion. If you're in wearables or AR, focus on solving real problems, not just adding features.",
+  "signoff": "Keep watching this space (literally),\n\nThe Hustle Team"
 }`;
 }
 
@@ -139,9 +188,29 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                   type: 'string',
                   description: 'Newsletter subject line'
                 },
-                intro: {
+                theming: {
+                  type: 'object',
+                  description: 'Thematic strategy for the newsletter',
+                  properties: {
+                    overallTheme: {
+                      type: 'string',
+                      description: 'The big picture story connecting all articles'
+                    },
+                    strategy: {
+                      type: 'string',
+                      description: 'How articles will be connected thematically'
+                    },
+                    angle: {
+                      type: 'string',
+                      description: 'Perspective or tone (skeptical, optimistic, etc.)'
+                    }
+                  },
+                  required: ['overallTheme', 'strategy', 'angle'],
+                  additionalProperties: false
+                },
+                thematicIntro: {
                   type: 'string',
-                  description: 'Brief introduction paragraph'
+                  description: 'Theme-setting introduction with no heading'
                 },
                 sections: {
                   type: 'array',
@@ -149,31 +218,58 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                   items: {
                     type: 'object',
                     properties: {
-                      emoji: {
+                      heading: {
                         type: 'string',
-                        description: 'Relevant emoji for the section'
+                        description: 'Section heading (often a question)'
                       },
-                      headline: {
-                        type: 'string',
-                        description: 'Story headline'
-                      },
-                      content: {
-                        type: 'string',
-                        description: 'Story analysis content (2-3 paragraphs)'
-                      },
-                      whyItMatters: {
-                        type: 'string',
-                        description: 'Business insight with bold formatting'
-                      },
-                      urls: {
+                      contentBlocks: {
                         type: 'array',
-                        description: 'Source article URLs',
+                        description: 'Array of content blocks (paragraphs and bullet lists)',
                         items: {
-                          type: 'string'
+                          type: 'object',
+                          properties: {
+                            type: {
+                              type: 'string',
+                              enum: ['paragraph', 'bulletList'],
+                              description: 'Type of content block'
+                            },
+                            content: {
+                              type: 'string',
+                              description: 'Paragraph content (for paragraph type)'
+                            },
+                            items: {
+                              type: 'array',
+                              description: 'Array of bullet point items (for bulletList type)',
+                              items: {
+                                type: 'string'
+                              }
+                            }
+                          },
+                          required: ['type'],
+                          additionalProperties: false
+                        }
+                      },
+                      hyperlinks: {
+                        type: 'array',
+                        description: 'Array of hyperlinks for this section',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            linkText: {
+                              type: 'string',
+                              description: 'Exact text to hyperlink'
+                            },
+                            url: {
+                              type: 'string',
+                              description: 'Source article URL'
+                            }
+                          },
+                          required: ['linkText', 'url'],
+                          additionalProperties: false
                         }
                       }
                     },
-                    required: ['emoji', 'headline', 'content', 'whyItMatters', 'urls'],
+                    required: ['heading', 'contentBlocks', 'hyperlinks'],
                     additionalProperties: false
                   }
                 },
@@ -186,7 +282,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                   description: 'Newsletter closing/signoff'
                 }
               },
-              required: ['subject', 'intro', 'sections', 'actionableAdvice', 'signoff'],
+              required: ['subject', 'theming', 'thematicIntro', 'sections', 'actionableAdvice', 'signoff'],
               additionalProperties: false
             }
           }
@@ -218,13 +314,26 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
     // Fallback newsletter
     return {
       subject: `📰 Your ${userQuery} Newsletter`,
-      intro: "Here's what we found on your topic:",
+      theming: {
+        overallTheme: `Latest developments in ${userQuery}`,
+        strategy: 'Present key stories without thematic connection due to processing error',
+        angle: 'Informational - basic coverage of recent developments'
+      },
+      thematicIntro: "Here's what we found on your topic:",
       sections: articles.slice(0, 3).map((article, index) => ({
-        emoji: ['🔥', '💰', '📊'][index] || '📰',
-        headline: article.title,
-        content: article.excerpt || 'Full content unavailable',
-        whyItMatters: 'This story is relevant to your interests in ' + userQuery,
-        urls: [article.url]
+        heading: article.title,
+        contentBlocks: [
+          {
+            type: 'paragraph',
+            content: article.excerpt || 'Full content unavailable'
+          }
+        ],
+        hyperlinks: [
+          {
+            linkText: article.title,
+            url: article.url
+          }
+        ]
       })),
       actionableAdvice: 'Stay tuned for more updates on ' + userQuery,
       signoff: 'Until next time!\n\nThe Hustle Team'

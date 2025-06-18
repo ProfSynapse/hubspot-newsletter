@@ -88,7 +88,7 @@ describe('Integration Tests', () => {
     
     // Verify newsletter quality
     expect(newsletter.subject.length).toBeGreaterThan(5);
-    expect(newsletter.intro.length).toBeGreaterThan(10);
+    expect(newsletter.thematicIntro.length).toBeGreaterThan(10);
     expect(newsletter.actionableAdvice.length).toBeGreaterThan(5);
   }, 120000);
 
