@@ -3,7 +3,7 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files from backend
+# Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
 
@@ -29,9 +29,6 @@ RUN npm ci --only=production
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
-
-# Copy environment files if needed
-COPY --from=builder /app/.env* ./
 
 # Expose port
 EXPOSE 3000
