@@ -29,6 +29,15 @@ const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
     setQuery(suggestion);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (query.trim() && !isLoading) {
+        onSubmit(query.trim());
+      }
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-8 space-y-6">
       <h3 className="text-xl font-semibold text-gray-900">What current events interest you?</h3>
@@ -41,6 +50,7 @@ const QueryForm: React.FC<QueryFormProps> = ({ onSubmit, isLoading }) => {
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="e.g., latest AI funding rounds, recent tech acquisitions, this week's market volatility, new startup launches..."
           className="w-full h-24 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-500"
           disabled={isLoading}

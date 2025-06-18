@@ -217,10 +217,34 @@ function App() {
         {state === 'generating' && (
           <div className="space-y-8">
             <Hero />
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Generating your newsletter...</h3>
-              <p className="text-gray-600">Creating personalized content using the curated articles</p>
+            <div className="bg-white rounded-xl border border-gray-200 p-8">
+              <div className="text-center mb-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Generating your newsletter...</h3>
+                <p className="text-gray-600">Creating personalized content using these curated articles</p>
+              </div>
+              
+              <div className="border-t border-gray-200 pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <h4 className="text-md font-medium text-gray-900">
+                    Found {curatedArticles.length} relevant articles from {totalArticlesConsidered} total articles
+                  </h4>
+                </div>
+                <div className="grid gap-3">
+                  {curatedArticles.map(article => (
+                    <div key={article.id} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h5 className="font-medium text-gray-900 text-sm mb-1">{article.title}</h5>
+                          <p className="text-xs text-gray-600 mb-2">{article.source} • {new Date(article.published_at).toLocaleDateString()}</p>
+                          <p className="text-xs text-gray-700">{article.excerpt}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
