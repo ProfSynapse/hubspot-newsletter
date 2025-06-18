@@ -1,6 +1,6 @@
-import { initializeDatabase, insertArticle, cleanOldArticles } from '../common/database/sqlite';
-import { parseAllFeeds } from '../common/scrapers/rss-parser';
-import { scrapeArticles } from '../common/scrapers/content-scraper';
+import { initializeDatabase, insertArticle, cleanOldArticles } from './common/database/sqlite';
+import { parseAllFeeds } from './common/scrapers/rss-parser';
+import { scrapeArticles } from './common/scrapers/content-scraper';
 import dotenv from 'dotenv';
 import path from 'path';
 
