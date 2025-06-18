@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbPath = process.env.DATABASE_PATH || './database/newsletter.db';
+const dbPath = process.env.DATABASE_PATH || '/data/newsletter.db';
 const dbDir = path.dirname(dbPath);
 
 if (!fs.existsSync(dbDir)) {

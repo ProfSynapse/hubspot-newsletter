@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc && mkdir -p dist/public && cp -r ../frontend/dist/* dist/public/ 2>/dev/null || echo 'Frontend not built yet'",
-    "start": "node dist/server.js",
+    "start": "npm run build && node dist/server.js",
     "test": "jest",
     "test:coverage": "jest --coverage"
   },
