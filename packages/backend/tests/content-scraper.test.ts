@@ -51,7 +51,7 @@ describe('Content Scraper', () => {
       { ...sampleArticle, url: 'https://httpbin.org/xml', title: 'Test Article 3' }
     ];
     
-    const results = await scrapeArticles(articles);
+    const results = await Promise.all(articles.map(article => scrapeFullContent(article)));
     
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBe(articles.length);
