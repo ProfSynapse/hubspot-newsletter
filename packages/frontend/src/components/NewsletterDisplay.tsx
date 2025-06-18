@@ -14,6 +14,83 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
   articleCount,
   onNewQuery 
 }) => {
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(formatNewsletter());
+      // Show a brief success message (you could add a toast notification here)
+      alert('Newsletter copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      alert('Failed to copy to clipboard');
+    }
+  };
+
+  const exportToHTML = () => {
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${newsletter.subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        h1 { color: #ea580c; border-bottom: 2px solid #fed7aa; padding-bottom: 10px; }
+        h2 { color: #9a3412; margin-top: 30px; }
+        .section { margin: 20px 0; }
+        .why-matters { background: #fff7ed; padding: 15px; border-left: 4px solid #fb923c; margin: 10px 0; }
+        .sources { background: #f9fafb; padding: 10px; border: 1px solid #e5e7eb; margin: 10px 0; font-size: 0.9em; }
+        .sources a { color: #2563eb; text-decoration: none; }
+        .sources a:hover { text-decoration: underline; }
+        .intro { font-style: italic; color: #6b7280; }
+        .signoff { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        ul { padding-left: 20px; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔥 ${newsletter.subject}</h1>
+    <p class="intro">${newsletter.intro}</p>
+    
+    <h2>The Big Stories (That Actually Matter)</h2>
+    
+    ${newsletter.sections.map((section, index) => `
+    <div class="section">
+        <h3>${section.emoji} Story #${index + 1}: ${section.headline}</h3>
+        <p>${section.content}</p>
+        <div class="why-matters">
+            <strong>Why it Matters:</strong> ${section.whyItMatters}
+        </div>
+        ${section.urls && section.urls.length > 0 ? `
+        <div class="sources">
+            <strong>Sources:</strong>
+            <ul>
+                ${section.urls.map(url => `<li><a href="${url}" target="_blank">${url}</a></li>`).join('')}
+            </ul>
+        </div>
+        ` : ''}
+    </div>
+    `).join('')}
+    
+    <h2>Why This Matters for Your Business</h2>
+    <p>${newsletter.actionableAdvice}</p>
+    
+    <div class="signoff">
+        ${newsletter.signoff}
+    </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `newsletter-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   const renderContent = (content: string) => {
     return content.split('\n').map((line, index) => {
       if (line.startsWith('# ')) {
@@ -100,12 +177,26 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
           <h2 className="text-2xl font-bold text-gray-900">Your Newsletter is Ready</h2>
           <p className="text-gray-600">Based on: "{query}"</p>
         </div>
-        <button
-          onClick={onNewQuery}
-          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
-        >
-          Generate Another
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={copyToClipboard}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+          >
+            📋 Copy Text
+          </button>
+          <button
+            onClick={exportToHTML}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+          >
+            📄 Export HTML
+          </button>
+          <button
+            onClick={onNewQuery}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
+          >
+            Generate Another
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
