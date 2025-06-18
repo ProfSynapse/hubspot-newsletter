@@ -22,11 +22,42 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
       if (line.startsWith('## ')) {
         return <h2 key={index} className="text-xl font-semibold text-gray-900 mt-6 mb-3">{line.slice(3)}</h2>;
       }
+      if (line.startsWith('WHYITMATTERS:')) {
+        const text = line.slice(13); // Remove "WHYITMATTERS:"
+        return (
+          <p key={index} className="text-gray-700 mb-3 leading-relaxed">
+            <strong className="font-semibold text-gray-900">Why it Matters</strong>: {text}
+          </p>
+        );
+      }
       if (line.startsWith('**') && line.endsWith('**')) {
         return <p key={index} className="font-semibold text-gray-900 mb-2">{line.slice(2, -2)}</p>;
       }
       if (line.startsWith('*') && line.endsWith('*')) {
         return <p key={index} className="text-gray-600 text-sm italic border-l-4 border-orange-200 pl-4 my-4">{line.slice(1, -1)}</p>;
+      }
+      if (line.startsWith('SOURCES:')) {
+        const sourcesText = line.slice(8); // Remove "SOURCES:"
+        const urls = sourcesText.split('|');
+        return (
+          <blockquote key={index} className="text-gray-600 text-sm border-l-4 border-gray-300 pl-4 my-4 bg-gray-50 py-2">
+            <strong>Sources:</strong>
+            <ul className="list-disc list-inside mt-1">
+              {urls.map((url, urlIndex) => (
+                <li key={urlIndex}>
+                  <a 
+                    href={url.trim()} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    {url.trim()}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </blockquote>
+        );
       }
       if (line.startsWith('> ')) {
         return <blockquote key={index} className="text-gray-600 text-sm border-l-4 border-gray-300 pl-4 my-4 bg-gray-50 py-2">{line.slice(2)}</blockquote>;
@@ -49,9 +80,9 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     newsletter.sections.forEach((section, index) => {
       content += `**${section.emoji} Story #${index + 1}: ${section.headline}**\n`;
       content += `${section.content}\n\n`;
-      content += `**Why it Matters**: ${section.whyItMatters}\n\n`;
+      content += `WHYITMATTERS:${section.whyItMatters}\n\n`;
       if (section.urls && section.urls.length > 0) {
-        content += `> Sources: ${section.urls.join(', ')}\n\n`;
+        content += `SOURCES:${section.urls.join('|')}\n\n`;
       }
     });
     
