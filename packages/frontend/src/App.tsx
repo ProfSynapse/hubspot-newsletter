@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import QueryForm from './components/QueryForm';
 import NewsletterDisplay from './components/NewsletterDisplay';
+import Footer from './components/Footer';
 import { generateNewsletter, checkHealth } from './api/newsletter';
 import { Newsletter } from './types/newsletter';
 import { AlertCircle } from 'lucide-react';
@@ -45,7 +46,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-blue-50">
       <Header />
       
       {!isHealthy && (
@@ -57,40 +58,31 @@ function App() {
         </div>
       )}
 
-      {state === 'form' && (
-        <>
-          <Hero />
-          <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {state === 'form' && (
+          <div className="space-y-8">
+            <Hero />
             <QueryForm onSubmit={handleSubmit} isLoading={false} />
           </div>
-        </>
-      )}
+        )}
 
-      {state === 'loading' && (
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <QueryForm onSubmit={handleSubmit} isLoading={true} />
-          <div className="mt-8 text-center">
-            <div className="inline-flex items-center gap-3 bg-white rounded-lg px-6 py-4 shadow-sm">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-hustle-orange"></div>
-              <span className="text-gray-700">Analyzing news and generating your newsletter...</span>
-            </div>
+        {state === 'loading' && (
+          <div className="space-y-8">
+            <Hero />
+            <QueryForm onSubmit={handleSubmit} isLoading={true} />
           </div>
-        </div>
-      )}
+        )}
 
-      {state === 'newsletter' && newsletter && (
-        <div className="max-w-6xl mx-auto px-4 py-12">
+        {state === 'newsletter' && newsletter && (
           <NewsletterDisplay
             newsletter={newsletter}
             query={query}
             articleCount={articleCount}
             onNewQuery={handleNewQuery}
           />
-        </div>
-      )}
+        )}
 
-      {state === 'error' && (
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        {state === 'error' && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-red-800 mb-2">
@@ -99,21 +91,15 @@ function App() {
             <p className="text-red-700 mb-4">{error}</p>
             <button
               onClick={handleNewQuery}
-              className="bg-hustle-orange text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+              className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
             >
               Try Again
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <footer className="bg-hustle-dark text-white py-8 mt-16">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <p className="text-gray-300">
-            Built for HubSpot Media Assessment • Powered by Google Gemini 2.5 Pro
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

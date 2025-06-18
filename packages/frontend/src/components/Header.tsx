@@ -1,23 +1,21 @@
 import React from 'react';
+import { Sparkles } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="max-w-6xl mx-auto px-4 py-4">
+    <header className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="max-w-4xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img 
-              src="https://20627419.fs1.hubspotusercontent-na1.net/hubfs/20627419/The%20Hustle/Logos/The%20Hustle%20Logo.png"
-              alt="The Hustle"
-              className="h-8"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-hustle-dark">Newsletter Bot</h1>
-              <p className="text-sm text-gray-600">AI-powered business news, The Hustle style</p>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Newsletter Bot</h1>
+                <p className="text-sm text-gray-500">by HubSpot Media</p>
+              </div>
             </div>
-          </div>
-          <div className="text-sm text-gray-500">
-            HubSpot Assessment Demo
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Newsletter } from '../types/newsletter';
-import { RefreshCw, Copy, Check } from 'lucide-react';
 
 interface NewsletterDisplayProps {
   newsletter: Newsletter;
@@ -15,74 +14,73 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
   articleCount,
   onNewQuery 
 }) => {
-  const [copied, setCopied] = React.useState(false);
+  const renderContent = (content: string) => {
+    return content.split('\n').map((line, index) => {
+      if (line.startsWith('# ')) {
+        return <h1 key={index} className="text-2xl font-bold text-gray-900 mb-4">{line.slice(2)}</h1>;
+      }
+      if (line.startsWith('## ')) {
+        return <h2 key={index} className="text-xl font-semibold text-gray-900 mt-6 mb-3">{line.slice(3)}</h2>;
+      }
+      if (line.startsWith('**') && line.endsWith('**')) {
+        return <p key={index} className="font-semibold text-gray-900 mb-2">{line.slice(2, -2)}</p>;
+      }
+      if (line.startsWith('*') && line.endsWith('*')) {
+        return <p key={index} className="text-gray-600 text-sm italic border-l-4 border-orange-200 pl-4 my-4">{line.slice(1, -1)}</p>;
+      }
+      if (line.trim() === '') {
+        return <div key={index} className="h-2"></div>;
+      }
+      if (line.startsWith('---')) {
+        return <hr key={index} className="my-6 border-gray-200" />;
+      }
+      return <p key={index} className="text-gray-700 mb-3 leading-relaxed">{line}</p>;
+    });
+  };
 
-  const copyToClipboard = () => {
-    if (newsletter.markdown) {
-      navigator.clipboard.writeText(newsletter.markdown);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const formatNewsletter = () => {
+    let content = `# 🔥 ${newsletter.subject}\n\n`;
+    content += `${newsletter.intro}\n\n`;
+    content += `## The Big Stories (That Actually Matter)\n\n`;
+    
+    newsletter.sections.forEach((section, index) => {
+      content += `**${section.emoji} Story #${index + 1}: ${section.headline}**\n`;
+      content += `${section.content}\n\n`;
+      content += `*Why this matters: ${section.whyItMatters}*\n\n`;
+    });
+    
+    content += `## Why This Matters for Your Business\n\n`;
+    content += `${newsletter.actionableAdvice}\n\n`;
+    content += `---\n${newsletter.signoff}`;
+    
+    return content;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg">
-      <div className="border-b border-gray-200 p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-hustle-dark mb-2">
-              {newsletter.subject}
-            </h2>
-            <p className="text-sm text-gray-600">
-              Generated from {articleCount} articles about "{query}"
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={copyToClipboard}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-            <button
-              onClick={onNewQuery}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-hustle-orange text-white hover:bg-orange-700 rounded-lg transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              New Query
-            </button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Your Newsletter is Ready</h2>
+          <p className="text-gray-600">Based on: "{query}"</p>
         </div>
+        <button
+          onClick={onNewQuery}
+          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors"
+        >
+          Generate Another
+        </button>
       </div>
 
-      <div className="p-8 space-y-8 max-w-4xl mx-auto">
-        <div className="text-lg text-gray-700 leading-relaxed">
-          {newsletter.intro}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
+          <h3 className="text-white font-bold text-lg">📰 Your Daily Business Brief</h3>
+          <p className="text-orange-100 text-sm">Personalized • {new Date().toLocaleDateString()} • {articleCount} articles analyzed</p>
         </div>
-
-        {newsletter.sections.map((section, index) => (
-          <article key={index} className="border-l-4 border-hustle-orange pl-6">
-            <h3 className="text-xl font-bold text-hustle-dark mb-3">
-              {section.emoji} {section.headline}
-            </h3>
-            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">
-              {section.content}
-            </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <strong className="text-hustle-orange">Why this matters:</strong>
-              <p className="text-gray-700 mt-1">{section.whyItMatters}</p>
-            </div>
-          </article>
-        ))}
-
-        <div className="border-t border-gray-200 pt-8">
-          <div className="bg-hustle-dark text-white rounded-lg p-6">
-            <p className="font-semibold text-lg mb-2">{newsletter.actionableAdvice}</p>
+        
+        <div className="p-6">
+          <div className="prose prose-gray max-w-none">
+            {renderContent(formatNewsletter())}
           </div>
-          <p className="text-gray-600 mt-4 text-center italic">
-            {newsletter.signoff}
-          </p>
         </div>
       </div>
     </div>
