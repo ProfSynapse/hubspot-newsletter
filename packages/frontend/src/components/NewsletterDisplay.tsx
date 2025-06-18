@@ -73,8 +73,17 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
-          <h3 className="text-white font-bold text-lg">📰 Your Daily Business Brief</h3>
-          <p className="text-orange-100 text-sm">Personalized • {new Date().toLocaleDateString()} • {articleCount} articles analyzed</p>
+          <div className="flex items-center space-x-3">
+            <img 
+              src="https://20627419.fs1.hubspotusercontent-na1.net/hubfs/20627419/The%20Hustle/Logos/The%20Hustle%20Logo.png" 
+              alt="The Hustle Logo" 
+              className="h-8 w-auto"
+            />
+            <div>
+              <h3 className="text-white font-bold text-lg">Your Daily Business Brief</h3>
+              <p className="text-orange-100 text-sm">Personalized • {new Date().toLocaleDateString()} • {articleCount} articles analyzed</p>
+            </div>
+          </div>
         </div>
         
         <div className="p-6">

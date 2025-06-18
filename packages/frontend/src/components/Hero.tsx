@@ -8,8 +8,8 @@ const Hero: React.FC = () => {
         <span className="text-orange-600">business newsletter</span>
       </h2>
       <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-        We scrape 47+ business sources daily and create a newsletter tailored to your interests. 
-        Think Morning Brew, but written just for you.
+        We curate daily sources and create a newsletter tailored to your interests. 
+        It's The Hustle, but written just for you.
       </p>
     </div>
   );
