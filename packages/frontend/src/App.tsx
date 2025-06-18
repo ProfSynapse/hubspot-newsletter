@@ -3,7 +3,6 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import QueryForm from './components/QueryForm';
 import NewsletterDisplay from './components/NewsletterDisplay';
-import Footer from './components/Footer';
 import { generateNewsletter, checkHealth } from './api/newsletter';
 import { Newsletter } from './types/newsletter';
 import { AlertCircle } from 'lucide-react';
@@ -99,7 +98,6 @@ function App() {
         )}
       </div>
 
-      <Footer />
     </div>
   );
 }
