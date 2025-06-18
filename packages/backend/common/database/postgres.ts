@@ -136,6 +136,22 @@ export async function searchArticles(searchQuery: string): Promise<Article[]> {
   return result.rows;
 }
 
+export async function getArticlesByIds(ids: number[]): Promise<Article[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+  
+  const placeholders = ids.map((_, index) => `$${index + 1}`).join(',');
+  const selectQuery = `
+    SELECT * FROM articles 
+    WHERE id IN (${placeholders})
+    ORDER BY published_at DESC
+  `;
+  
+  const result = await query(selectQuery, ids);
+  return result.rows;
+}
+
 export async function cleanOldArticles(days: number = 7): Promise<void> {
   const deleteQuery = `
     DELETE FROM articles 

@@ -3,17 +3,19 @@ import Header from './components/Header';
 import Hero from './components/Hero';
 import QueryForm from './components/QueryForm';
 import NewsletterDisplay from './components/NewsletterDisplay';
-import { generateNewsletter, checkHealth } from './api/newsletter';
-import { Newsletter } from './types/newsletter';
-import { AlertCircle } from 'lucide-react';
+import { curateArticles, generateFromCurated, checkHealth } from './api/newsletter';
+import { Newsletter, CuratedArticle } from './types/newsletter';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
-type AppState = 'form' | 'loading' | 'newsletter' | 'error';
+type AppState = 'form' | 'curating' | 'curation-complete' | 'generating' | 'newsletter' | 'error';
 
 function App() {
   const [state, setState] = useState<AppState>('form');
   const [newsletter, setNewsletter] = useState<Newsletter | null>(null);
   const [query, setQuery] = useState('');
   const [articleCount, setArticleCount] = useState(0);
+  const [curatedArticles, setCuratedArticles] = useState<CuratedArticle[]>([]);
+  const [totalArticlesConsidered, setTotalArticlesConsidered] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isHealthy, setIsHealthy] = useState(true);
 
@@ -23,14 +25,32 @@ function App() {
 
   const handleSubmit = async (userQuery: string) => {
     setQuery(userQuery);
-    setState('loading');
+    setState('curating');
     setError(null);
 
     try {
-      const response = await generateNewsletter(userQuery);
-      setNewsletter(response.newsletter);
-      setArticleCount(response.articleCount);
-      setState('newsletter');
+      // Phase 1: Curate articles
+      const curationResponse = await curateArticles(userQuery);
+      setCuratedArticles(curationResponse.articles);
+      setTotalArticlesConsidered(curationResponse.totalArticlesConsidered);
+      setState('curation-complete');
+      
+      // Automatically proceed to Phase 2 after a brief pause
+      setTimeout(async () => {
+        setState('generating');
+        try {
+          // Phase 2: Generate newsletter
+          const articleIds = curationResponse.articles.map(article => article.id);
+          const generationResponse = await generateFromCurated(userQuery, articleIds);
+          setNewsletter(generationResponse.newsletter);
+          setArticleCount(generationResponse.articleCount);
+          setState('newsletter');
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to generate newsletter');
+          setState('error');
+        }
+      }, 2000);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       setState('error');
@@ -41,6 +61,8 @@ function App() {
     setState('form');
     setNewsletter(null);
     setQuery('');
+    setCuratedArticles([]);
+    setTotalArticlesConsidered(0);
     setError(null);
   };
 
@@ -65,10 +87,46 @@ function App() {
           </div>
         )}
 
-        {state === 'loading' && (
+        {state === 'curating' && (
           <div className="space-y-8">
             <Hero />
             <QueryForm onSubmit={handleSubmit} isLoading={true} />
+            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Finding relevant articles...</h3>
+              <p className="text-gray-600">Our AI is analyzing today's news to find the best stories for you</p>
+            </div>
+          </div>
+        )}
+
+        {state === 'curation-complete' && (
+          <div className="space-y-8">
+            <Hero />
+            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Articles curated successfully!</h3>
+              <p className="text-gray-600 mb-4">
+                Found {curatedArticles.length} relevant articles from {totalArticlesConsidered} total articles
+              </p>
+              <div className="text-sm text-gray-500 space-y-1">
+                {curatedArticles.map(article => (
+                  <div key={article.id} className="text-left">
+                    • {article.title} - {article.source}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {state === 'generating' && (
+          <div className="space-y-8">
+            <Hero />
+            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Generating your newsletter...</h3>
+              <p className="text-gray-600">Creating personalized content using the curated articles</p>
+            </div>
           </div>
         )}
 

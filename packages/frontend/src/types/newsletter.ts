@@ -15,11 +15,29 @@ export interface Newsletter {
   markdown?: string;
 }
 
+export interface CuratedArticle {
+  id: number;
+  title: string;
+  url: string;
+  source: string;
+  published_at: string;
+  excerpt: string;
+}
+
+export interface CurateArticlesResponse {
+  success: boolean;
+  query: string;
+  articleCount: number;
+  totalArticlesConsidered: number;
+  articles: CuratedArticle[];
+}
+
 export interface GenerateNewsletterResponse {
   success: boolean;
   query: string;
   articleCount: number;
   newsletter: Newsletter;
+  usedArticleIds?: number[];
 }
 
 export interface ApiError {
