@@ -247,7 +247,7 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     // Featured image (if exists)
     if (newsletter.featuredImage) {
       content += `![${newsletter.featuredImage.caption}](${newsletter.featuredImage.url})\n`;
-      content += `*${newsletter.featuredImage.caption}* - ${newsletter.featuredImage.source}\n\n`;
+      content += `${newsletter.featuredImage.caption} - ${newsletter.featuredImage.source}\n\n`;
     }
     
     // Sections
