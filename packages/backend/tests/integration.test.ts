@@ -1,5 +1,5 @@
-import { initializeDatabase, insertArticle, searchArticles } from '../../common/database/sqlite';
-import { parseAllFeeds } from '../../common/scrapers/rss-parser';
+import { initializeDatabase, insertArticle, searchArticles } from '../common/database/postgres';
+import { parseAllFeeds } from '../common/scrapers/rss-parser';
 import { generateNewsletter } from '../ai/newsletter-generator';
 import request from 'supertest';
 import express from 'express';

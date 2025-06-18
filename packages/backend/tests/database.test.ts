@@ -1,4 +1,4 @@
-import { initializeDatabase, insertArticle, getRecentArticles, searchArticles, Article } from '../../common/database/sqlite';
+import { initializeDatabase, insertArticle, getRecentArticles, searchArticles, Article } from '../common/database/postgres';
 import fs from 'fs';
 
 describe('Database Functions', () => {
@@ -7,10 +7,7 @@ describe('Database Functions', () => {
   });
 
   afterAll(() => {
-    // Clean up test database
-    if (fs.existsSync('./database/test-newsletter.db')) {
-      fs.unlinkSync('./database/test-newsletter.db');
-    }
+    // PostgreSQL cleanup happens automatically via connection pool
   });
 
   const sampleArticle: Article = {

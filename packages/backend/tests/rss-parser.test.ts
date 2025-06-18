@@ -1,4 +1,4 @@
-import { parseFeed, parseAllFeeds, RSS_FEEDS } from '../../common/scrapers/rss-parser';
+import { parseFeed, parseAllFeeds, RSS_FEEDS } from '../common/scrapers/rss-parser';
 
 describe('RSS Parser', () => {
   test('should have valid RSS feed configuration', () => {
