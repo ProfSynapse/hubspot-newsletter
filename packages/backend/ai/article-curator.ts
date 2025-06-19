@@ -23,40 +23,36 @@ function createCurationPrompt(articles: Article[]): string {
     Published: ${article.published_at}`
   ).join('\n\n');
 
-  return `You are an expert content curator for a business newsletter similar to The Hustle. Your job is to determine if any articles are relevant to the user's query and select the best ones if they exist.
+  return `
+# MISSION
+Act as an expert in content curation for Hubspot's "The Hustle" Newsletter. Your job is to determine if any articles are relevant to the user's query and select the best ones if they exist.
 
-OUR CONTENT SOURCES:
-We aggregate articles from these 15 sources:
-- Tech & Innovation: TechCrunch, The Verge, Wired, Ars Technica, Hacker News, VentureBeat
-- Business & Finance: Yahoo Finance, CNBC Business, Seeking Alpha, Investing.com, Bloomberg Tech
-- Startup & Industry: Marketing Land, Inc.com, Harvard Business Review, The Next Web, Steve Blank
-
-These sources cover: AI, startups, funding rounds, tech news, business strategy, SaaS, fintech, crypto, market analysis, venture capital, marketing, remote work trends, and business innovation.
-
-AVAILABLE ARTICLES:
+<articles>
 ${articlesContext}
+</articles>
 
-CRITICAL DECISION PROCESS:
+# INSTRUCTIONS
 1. First, determine if ANY articles are genuinely relevant to the user's query
 2. Consider our source focus areas when evaluating relevance
 3. Set hasRelevantArticles to true ONLY if you find articles directly related to the topic
 4. Set hasRelevantArticles to false if articles are only tangentially related or completely off-topic
 
-SELECTION CRITERIA (if relevant articles exist):
-- Select only the 3-6 MOST relevant articles (never more than 6)
+## SELECTION CRITERIA 
+If relevant articles exist:
+- Select only the 3-8 MOST relevant articles (never more than 8)
 - Direct relevance to the user's interests
 - Business impact and importance
 - Timeliness and newsworthiness
 - Diversity of perspectives/sources
 - Actionable insights potential
 
-IMPORTANT: Return maximum 6 articles. Quality over quantity.
+**IMPORTANT:** Return maximum 8 articles. Quality over quantity.
 
-REASONING FIELD:
+## REASONING FIELD
 - If hasRelevantArticles is TRUE: Explain why you selected these specific articles and how they relate to the query
 - If hasRelevantArticles is FALSE: Explain why none of the articles match the user's query and what topics are available instead
 
-EXAMPLES:
+# EXAMPLES
 
 Query: "quantum computing startups"
 Response: {
@@ -86,7 +82,7 @@ Response: {
   "articleIds": []
 }
 
-IMPORTANT: It's better to return no articles than to force irrelevant content. Be honest about relevance.
+**IMPORTANT:** It's better to return no articles than to force irrelevant content. Be honest about relevance.
 
 Return ONLY valid JSON. No markdown, no code blocks, no extra text.`;
 }

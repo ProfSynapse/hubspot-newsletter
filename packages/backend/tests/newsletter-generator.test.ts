@@ -1,5 +1,10 @@
 import { generateNewsletter } from '../ai/newsletter-generator';
 import { Article } from '../common/database/postgres';
+import axios from 'axios';
+
+jest.mock('axios');
+
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('Newsletter Generator', () => {
   const sampleArticles: Article[] = [
@@ -8,14 +13,26 @@ describe('Newsletter Generator', () => {
       excerpt: 'A new AI company focused on business automation has raised significant funding from venture capitalists.',
       source: 'TechCrunch',
       url: 'https://example.com/ai-funding',
-      published_at: new Date().toISOString()
+      published_at: new Date().toISOString(),
+      images: [
+        {
+          url: 'https://example.com/ai-startup-image.jpg',
+          alt: 'AI startup team photo'
+        }
+      ]
     },
     {
       title: 'SaaS Pricing Strategies That Actually Work',
       excerpt: 'How modern SaaS companies are optimizing their pricing models for maximum revenue growth.',
       source: 'Business Insider',
       url: 'https://example.com/saas-pricing',
-      published_at: new Date().toISOString()
+      published_at: new Date().toISOString(),
+      images: [
+        {
+          url: 'https://example.com/saas-pricing-chart.jpg',
+          alt: 'SaaS pricing strategies chart'
+        }
+      ]
     },
     {
       title: 'Remote Work Productivity Trends in 2024',
@@ -26,14 +43,69 @@ describe('Newsletter Generator', () => {
     }
   ];
 
+  const mockNewsletterResponse = {
+    subject: '🤖 The AI Automation Revolution',
+    theming: {
+      overallTheme: 'AI-driven business transformation across industries',
+      strategy: 'Connect AI funding to practical SaaS applications and remote work productivity',
+      angle: 'Optimistic yet practical'
+    },
+    thematicIntro: 'AI is reshaping how businesses operate, from automation to pricing strategies.',
+    featuredImage: {
+      url: 'https://example.com/ai-startup-image.jpg',
+      caption: 'AI startup team celebrating funding round',
+      source: 'TechCrunch'
+    },
+    sections: [
+      {
+        heading: 'The AI Funding Boom',
+        contentBlocks: [
+          {
+            type: 'paragraph',
+            content: 'Venture capitalists are pouring money into AI startups.'
+          }
+        ],
+        hyperlinks: [
+          {
+            linkText: 'AI Startup Raises $50M',
+            url: 'https://example.com/ai-funding'
+          }
+        ]
+      }
+    ],
+    actionableAdvice: 'Evaluate AI tools for your business processes',
+    signoff: 'Stay innovative,\n\nThe Hustle Team'
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Set a mock API key for tests
+    process.env.OPENROUTER_API_KEY = 'test-api-key';
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('should generate newsletter with valid structure', async () => {
     const query = 'AI startup funding';
+    
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify(mockNewsletterResponse)
+          }
+        }]
+      }
+    });
     
     const newsletter = await generateNewsletter(query, sampleArticles);
     
     expect(newsletter).toHaveProperty('subject');
     expect(newsletter).toHaveProperty('theming');
     expect(newsletter).toHaveProperty('thematicIntro');
+    expect(newsletter).toHaveProperty('featuredImage');
     expect(newsletter).toHaveProperty('sections');
     expect(newsletter).toHaveProperty('actionableAdvice');
     expect(newsletter).toHaveProperty('signoff');
@@ -44,6 +116,10 @@ describe('Newsletter Generator', () => {
     expect(newsletter.theming).toHaveProperty('overallTheme');
     expect(newsletter.theming).toHaveProperty('strategy');
     expect(newsletter.theming).toHaveProperty('angle');
+    
+    expect(newsletter.featuredImage).toHaveProperty('url');
+    expect(newsletter.featuredImage).toHaveProperty('caption');
+    expect(newsletter.featuredImage).toHaveProperty('source');
     
     expect(Array.isArray(newsletter.sections)).toBe(true);
     expect(newsletter.sections.length).toBeGreaterThan(0);
@@ -57,28 +133,56 @@ describe('Newsletter Generator', () => {
     ];
     
     for (const query of queries) {
+      mockedAxios.post.mockResolvedValueOnce({
+        data: {
+          choices: [{
+            message: {
+              content: JSON.stringify(mockNewsletterResponse)
+            }
+          }]
+        }
+      });
+      
       const newsletter = await generateNewsletter(query, sampleArticles);
       
       expect(newsletter.sections.length).toBeGreaterThan(0);
     }
   }, 45000);
 
-  test('should generate fallback newsletter when AI fails', async () => {
-    // Test with empty API key to trigger fallback
-    const originalKey = process.env.OPENROUTER_API_KEY;
-    process.env.OPENROUTER_API_KEY = '';
+  test('should retry on validation failure and eventually throw', async () => {
+    // Mock a response without required fields to trigger validation failure
+    const invalidResponse = {
+      ...mockNewsletterResponse,
+      featuredImage: undefined // Missing required field
+    };
     
-    const newsletter = await generateNewsletter('test query', sampleArticles);
+    mockedAxios.post.mockResolvedValue({
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify(invalidResponse)
+          }
+        }]
+      }
+    });
     
-    expect(newsletter).toHaveProperty('subject');
-    expect(newsletter).toHaveProperty('sections');
-    expect(newsletter.sections.length).toBeGreaterThan(0);
+    await expect(generateNewsletter('test query', sampleArticles)).rejects.toThrow();
     
-    // Restore original key
-    process.env.OPENROUTER_API_KEY = originalKey;
+    // Should have retried 3 times
+    expect(mockedAxios.post).toHaveBeenCalledTimes(3);
   });
 
   test('should validate newsletter section structure', async () => {
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify(mockNewsletterResponse)
+          }
+        }]
+      }
+    });
+    
     const newsletter = await generateNewsletter('business automation', sampleArticles);
     
     newsletter.sections.forEach(section => {
@@ -89,6 +193,9 @@ describe('Newsletter Generator', () => {
       expect(typeof section.heading).toBe('string');
       expect(Array.isArray(section.contentBlocks)).toBe(true);
       expect(Array.isArray(section.hyperlinks)).toBe(true);
+      
+      // Validate at least one hyperlink per section
+      expect(section.hyperlinks.length).toBeGreaterThan(0);
       
       section.contentBlocks.forEach(block => {
         expect(block).toHaveProperty('type');
@@ -113,6 +220,16 @@ describe('Newsletter Generator', () => {
   }, 30000);
 
   test('should handle empty articles array', async () => {
+    mockedAxios.post.mockResolvedValueOnce({
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify(mockNewsletterResponse)
+          }
+        }]
+      }
+    });
+    
     const newsletter = await generateNewsletter('test query', []);
     
     expect(newsletter).toHaveProperty('subject');
@@ -120,12 +237,47 @@ describe('Newsletter Generator', () => {
     expect(Array.isArray(newsletter.sections)).toBe(true);
   });
 
+  test('should retry when sections lack hyperlinks', async () => {
+    // Mock a response without hyperlinks in sections
+    const responseWithoutHyperlinks = {
+      ...mockNewsletterResponse,
+      sections: [{
+        heading: 'Section without links',
+        contentBlocks: [{
+          type: 'paragraph',
+          content: 'Some content'
+        }],
+        hyperlinks: [] // Empty hyperlinks array
+      }]
+    };
+    
+    mockedAxios.post.mockResolvedValue({
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify(responseWithoutHyperlinks)
+          }
+        }]
+      }
+    });
+    
+    await expect(generateNewsletter('test query', sampleArticles)).rejects.toThrow();
+    
+    // Should have retried 3 times
+    expect(mockedAxios.post).toHaveBeenCalledTimes(3);
+  });
+
   test('should make real API call to OpenRouter if API key provided', async () => {
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.log('Skipping real API test - no API key provided');
+    // Only run this test if explicitly enabled
+    if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === 'test-api-key') {
+      console.log('Skipping real API test - no real API key provided');
       return;
     }
 
+    // Clear mocks for real API call
+    jest.unmock('axios');
+    const realAxios = require('axios').default;
+    
     console.log('Making real API call to OpenRouter...');
     const newsletter = await generateNewsletter('AI business automation', sampleArticles);
     
