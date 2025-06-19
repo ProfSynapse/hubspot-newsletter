@@ -97,6 +97,7 @@ STRUCTURE:
 
 IMPORTANT: 
 - All fields should contain plain text only. Do not use markdown formatting (no asterisks, underscores, etc.) in captions or any other fields.
+- Image captions must be plain text without any asterisks (*) or underscores (_) or other formatting.
 - Every section MUST include at least one hyperlink - this is required for proper citation.
 
 CRITICAL: Return ONLY valid JSON. No markdown, no code blocks, no extra text.
@@ -368,7 +369,17 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         const parseResult = parseJsonWithFallback<GeneratedNewsletter>(content);
         
         if (parseResult.success) {
-          return parseResult.data!;
+          const newsletter = parseResult.data!;
+          
+          // Post-process to remove any markdown formatting that slipped through
+          if (newsletter.featuredImage?.caption) {
+            newsletter.featuredImage.caption = newsletter.featuredImage.caption
+              .replace(/^\*+|\*+$/g, '') // Remove asterisks from start/end
+              .replace(/^_+|_+$/g, '') // Remove underscores from start/end
+              .trim();
+          }
+          
+          return newsletter;
         } else {
           console.warn('Failed to parse AI response as JSON:', parseResult.error);
           console.warn('Original content:', parseResult.originalText);
