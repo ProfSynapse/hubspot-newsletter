@@ -26,7 +26,7 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
   };
 
   const exportToHTML = () => {
-    const processHyperlinksToHTML = (text: string, hyperlinks: any[]) => {
+    const processHyperlinksToHTML = (text: string, hyperlinks: any[] = []) => {
       let processedText = text;
       hyperlinks.forEach(link => {
         const linkHTML = `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.linkText}</a>`;
@@ -77,11 +77,11 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
         
         ${section.contentBlocks.map(block => {
           if (block.type === 'paragraph' && block.content) {
-            const processedContent = processHyperlinksToHTML(block.content, section.hyperlinks);
+            const processedContent = processHyperlinksToHTML(block.content, block.hyperlinks);
             return `<div class="content-block"><p>${processedContent}</p></div>`;
           } else if (block.type === 'bulletList' && block.items) {
             const processedItems = block.items.map(item => {
-              const processedItem = processHyperlinksToHTML(item, section.hyperlinks);
+              const processedItem = processHyperlinksToHTML(item, block.hyperlinks);
               return `<li>${processedItem}</li>`;
             }).join('');
             return `<div class="content-block"><ul class="bullet-list">${processedItems}</ul></div>`;
@@ -229,7 +229,7 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     });
   };
 
-  const processHyperlinks = (text: string, hyperlinks: any[]) => {
+  const processHyperlinks = (text: string, hyperlinks: any[] = []) => {
     let processedText = text;
     hyperlinks.forEach(link => {
       const linkMarkdown = `[${link.linkText}](${link.url})`;
@@ -256,11 +256,11 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
       
       section.contentBlocks.forEach(block => {
         if (block.type === 'paragraph' && block.content) {
-          const processedContent = processHyperlinks(block.content, section.hyperlinks);
+          const processedContent = processHyperlinks(block.content, block.hyperlinks);
           content += `${processedContent}\n\n`;
         } else if (block.type === 'bulletList' && block.items) {
           block.items.forEach(item => {
-            const processedItem = processHyperlinks(item, section.hyperlinks);
+            const processedItem = processHyperlinks(item, block.hyperlinks);
             content += `• ${processedItem}\n`;
           });
           content += `\n`;

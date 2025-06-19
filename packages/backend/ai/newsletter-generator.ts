@@ -9,21 +9,21 @@ dotenv.config();
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'google/gemini-2.5-pro';
 
-interface ContentBlock {
-  type: 'paragraph' | 'bulletList';
-  content?: string;
-  items?: string[];
-}
-
 interface Hyperlink {
   linkText: string;
   url: string;
 }
 
+interface ContentBlock {
+  type: 'paragraph' | 'bulletList';
+  content?: string;
+  items?: string[];
+  hyperlinks?: Hyperlink[];
+}
+
 interface NewsletterSection {
   heading: string;
   contentBlocks: ContentBlock[];
-  hyperlinks: Hyperlink[];
 }
 
 interface Theming {
@@ -100,7 +100,8 @@ ${articlesContext}
 # GUIDELINES 
 - All fields will contain plain text only. Do not use markdown formatting (no asterisks, underscores, etc.) in captions or any other fields.
 - Image captions must be plain text without any asterisks (*) or underscores (_) or other formatting.
-- Every section MUST include at least one hyperlink - this is required for proper citation.
+- Every section MUST include at least one content block with hyperlinks - this is required for proper citation.
+- Hyperlinks should be attached to the specific content block where they are referenced.
 
 # JSON OUTPUT
 Return ONLY valid JSON. No markdown, no code blocks, no extra text.
@@ -125,17 +126,23 @@ Generate a JSON response with this structure:
       "contentBlocks": [
         {
           "type": "paragraph",
-          "content": "Paragraph content here"
+          "content": "Paragraph content here",
+          "hyperlinks": [
+            {
+              "linkText": "exact text to hyperlink within this paragraph",
+              "url": "source article URL"
+            }
+          ]
         },
         {
           "type": "bulletList",
-          "items": ["Bullet point 1", "Bullet point 2"]
-        }
-      ],
-      "hyperlinks": [
-        {
-          "linkText": "exact text to hyperlink",
-          "url": "source article URL"
+          "items": ["Bullet point 1", "Bullet point 2"],
+          "hyperlinks": [
+            {
+              "linkText": "text from one of the bullet points",
+              "url": "source article URL"
+            }
+          ]
         }
       ]
     }
@@ -166,7 +173,17 @@ Example 1 - Smart Glasses Theme:
       "contentBlocks": [
         {
           "type": "paragraph",
-          "content": "AI has significantly advanced since Google Glass. While we've seen AI-powered wearables like Humane's AI Pin fail, that's because, according to reviewers, they sucked. Wearables that actually provide a useful function, like fitness trackers, do well."
+          "content": "AI has significantly advanced since Google Glass. While we've seen AI-powered wearables like Humane's AI Pin fail, that's because, according to reviewers, they sucked. Wearables that actually provide a useful function, like fitness trackers, do well.",
+          "hyperlinks": [
+            {
+              "linkText": "AI-powered wearables",
+              "url": "https://techcrunch.com/humane-ai-pin-review"
+            },
+            {
+              "linkText": "Humane's AI Pin",
+              "url": "https://humane.com/aipin"
+            }
+          ]
         },
         {
           "type": "bulletList",
@@ -174,17 +191,13 @@ Example 1 - Smart Glasses Theme:
             "Google's Android XR prototype allows wearers to see pertinent info about their environment",
             "Most importantly, they look like normal glasses (partnerships with Warby Parker and Gentle Monster)",
             "Not conspicuous gadgetry that people will assuredly mock, as with Google Glass"
+          ],
+          "hyperlinks": [
+            {
+              "linkText": "Google's Android XR prototype",
+              "url": "https://techcrunch.com/google-android-xr"
+            }
           ]
-        }
-      ],
-      "hyperlinks": [
-        {
-          "linkText": "AI-powered wearables",
-          "url": "https://techcrunch.com/humane-ai-pin-review"
-        },
-        {
-          "linkText": "Humane's AI Pin",
-          "url": "https://humane.com/aipin"
         }
       ]
     }
@@ -196,15 +209,18 @@ Example 1 - Smart Glasses Theme:
 
 // Validation function to ensure newsletter has required hyperlinks and image
 function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
-  // Check that every section has at least one hyperlink with both linkText and url
-  const hasValidHyperlinks = newsletter.sections.every(section => 
-    section.hyperlinks && 
-    section.hyperlinks.length > 0 &&
-    section.hyperlinks.every(link => 
-      link.linkText && link.linkText.trim().length > 0 &&
-      link.url && link.url.trim().length > 0
-    )
-  );
+  // Check that every section has at least one content block with hyperlinks
+  const hasValidHyperlinks = newsletter.sections.every(section => {
+    // At least one content block in the section must have hyperlinks
+    return section.contentBlocks.some(block => 
+      block.hyperlinks && 
+      block.hyperlinks.length > 0 &&
+      block.hyperlinks.every(link => 
+        link.linkText && link.linkText.trim().length > 0 &&
+        link.url && link.url.trim().length > 0
+      )
+    );
+  });
   
   // Check that there is a featured image with valid url
   const hasValidFeaturedImage = !!(newsletter.featuredImage && 
@@ -324,34 +340,33 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                                   items: {
                                     type: 'string'
                                   }
+                                },
+                                hyperlinks: {
+                                  type: 'array',
+                                  description: 'Array of hyperlinks for this content block',
+                                  items: {
+                                    type: 'object',
+                                    properties: {
+                                      linkText: {
+                                        type: 'string',
+                                        description: 'Exact text to hyperlink within this content block'
+                                      },
+                                      url: {
+                                        type: 'string',
+                                        description: 'Source article URL'
+                                      }
+                                    },
+                                    required: ['linkText', 'url'],
+                                    additionalProperties: false
+                                  }
                                 }
                               },
                               required: ['type'],
                               additionalProperties: false
                             }
-                          },
-                          hyperlinks: {
-                            type: 'array',
-                            description: 'Array of hyperlinks for this section',
-                            minItems: 1,
-                            items: {
-                              type: 'object',
-                              properties: {
-                                linkText: {
-                                  type: 'string',
-                                  description: 'Exact text to hyperlink'
-                                },
-                                url: {
-                                  type: 'string',
-                                  description: 'Source article URL'
-                                }
-                              },
-                              required: ['linkText', 'url'],
-                              additionalProperties: false
-                            }
                           }
                         },
-                        required: ['heading', 'contentBlocks', 'hyperlinks'],
+                        required: ['heading', 'contentBlocks'],
                         additionalProperties: false
                       }
                     },
@@ -403,9 +418,12 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
           if (!validationResult) {
             console.log('Validation failed - checking details:');
             newsletter.sections.forEach((section, index) => {
-              console.log(`Section ${index} (${section.heading}):`, {
-                hyperlinksCount: section.hyperlinks?.length || 0,
-                hyperlinks: section.hyperlinks
+              console.log(`Section ${index} (${section.heading}):`);
+              section.contentBlocks.forEach((block, blockIndex) => {
+                console.log(`  Content Block ${blockIndex} (${block.type}):`, {
+                  hyperlinksCount: block.hyperlinks?.length || 0,
+                  hyperlinks: block.hyperlinks
+                });
               });
             });
             console.log('Featured Image:', newsletter.featuredImage);

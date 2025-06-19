@@ -62,13 +62,13 @@ describe('Newsletter Generator', () => {
         contentBlocks: [
           {
             type: 'paragraph',
-            content: 'Venture capitalists are pouring money into AI startups.'
-          }
-        ],
-        hyperlinks: [
-          {
-            linkText: 'AI Startup Raises $50M',
-            url: 'https://example.com/ai-funding'
+            content: 'Venture capitalists are pouring money into AI startups.',
+            hyperlinks: [
+              {
+                linkText: 'AI Startup Raises $50M',
+                url: 'https://example.com/ai-funding'
+              }
+            ]
           }
         ]
       }
@@ -188,14 +188,15 @@ describe('Newsletter Generator', () => {
     newsletter.sections.forEach(section => {
       expect(section).toHaveProperty('heading');
       expect(section).toHaveProperty('contentBlocks');
-      expect(section).toHaveProperty('hyperlinks');
       
       expect(typeof section.heading).toBe('string');
       expect(Array.isArray(section.contentBlocks)).toBe(true);
-      expect(Array.isArray(section.hyperlinks)).toBe(true);
       
-      // Validate at least one hyperlink per section
-      expect(section.hyperlinks.length).toBeGreaterThan(0);
+      // Validate at least one content block has hyperlinks
+      const hasHyperlinks = section.contentBlocks.some(block => 
+        block.hyperlinks && block.hyperlinks.length > 0
+      );
+      expect(hasHyperlinks).toBe(true);
       
       section.contentBlocks.forEach(block => {
         expect(block).toHaveProperty('type');
@@ -208,13 +209,16 @@ describe('Newsletter Generator', () => {
           expect(block).toHaveProperty('items');
           expect(Array.isArray(block.items)).toBe(true);
         }
-      });
-      
-      section.hyperlinks.forEach(link => {
-        expect(link).toHaveProperty('linkText');
-        expect(link).toHaveProperty('url');
-        expect(typeof link.linkText).toBe('string');
-        expect(typeof link.url).toBe('string');
+        
+        if (block.hyperlinks) {
+          expect(Array.isArray(block.hyperlinks)).toBe(true);
+          block.hyperlinks.forEach(link => {
+            expect(link).toHaveProperty('linkText');
+            expect(link).toHaveProperty('url');
+            expect(typeof link.linkText).toBe('string');
+            expect(typeof link.url).toBe('string');
+          });
+        }
       });
     });
   }, 30000);
@@ -237,8 +241,8 @@ describe('Newsletter Generator', () => {
     expect(Array.isArray(newsletter.sections)).toBe(true);
   });
 
-  test('should retry when sections lack hyperlinks', async () => {
-    // Mock a response without hyperlinks in sections
+  test('should retry when content blocks lack hyperlinks', async () => {
+    // Mock a response without hyperlinks in content blocks
     const responseWithoutHyperlinks = {
       ...mockNewsletterResponse,
       sections: [{
@@ -246,8 +250,8 @@ describe('Newsletter Generator', () => {
         contentBlocks: [{
           type: 'paragraph',
           content: 'Some content'
-        }],
-        hyperlinks: [] // Empty hyperlinks array
+          // No hyperlinks property
+        }]
       }]
     };
     

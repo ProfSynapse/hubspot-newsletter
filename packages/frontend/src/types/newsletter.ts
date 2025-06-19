@@ -1,18 +1,18 @@
-export interface ContentBlock {
-  type: 'paragraph' | 'bulletList';
-  content?: string;
-  items?: string[];
-}
-
 export interface Hyperlink {
   linkText: string;
   url: string;
 }
 
+export interface ContentBlock {
+  type: 'paragraph' | 'bulletList';
+  content?: string;
+  items?: string[];
+  hyperlinks?: Hyperlink[];
+}
+
 export interface NewsletterSection {
   heading: string;
   contentBlocks: ContentBlock[];
-  hyperlinks: Hyperlink[];
 }
 
 export interface Theming {
