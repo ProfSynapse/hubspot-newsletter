@@ -42,7 +42,7 @@ interface GeneratedNewsletter {
   subject: string;
   theming: Theming;
   thematicIntro: string;
-  featuredImage?: FeaturedImage;
+  featuredImage: FeaturedImage;
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;
@@ -89,7 +89,7 @@ THE HUSTLE'S STYLE:
 STRUCTURE:
 1. FIRST: Analyze the articles and identify a connecting theme
 2. Thematic intro (no heading) - sets up the big picture story
-3. OPTIONAL: Include a featured image using ONLY one of the provided image URLs from the articles (do not create or infer URLs)
+3. REQUIRED: Include a featured image using ONLY one of the provided image URLs from the articles (do not create or infer URLs)
 4. 3-4 themed sections with headings that explore different angles
 5. Mix paragraphs and bullet points naturally - flexible ordering
 6. REQUIRED: Each section MUST have at least one hyperlink to source articles
@@ -191,12 +191,24 @@ Example 1 - Smart Glasses Theme:
 }`;
 }
 
-// Validation function to ensure newsletter has required hyperlinks
+// Validation function to ensure newsletter has required hyperlinks and image
 function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
-  // Check that every section has at least one hyperlink
-  return newsletter.sections.every(section => 
-    section.hyperlinks && section.hyperlinks.length > 0
+  // Check that every section has at least one hyperlink with both linkText and url
+  const hasValidHyperlinks = newsletter.sections.every(section => 
+    section.hyperlinks && 
+    section.hyperlinks.length > 0 &&
+    section.hyperlinks.every(link => 
+      link.linkText && link.linkText.trim().length > 0 &&
+      link.url && link.url.trim().length > 0
+    )
   );
+  
+  // Check that there is a featured image with valid url
+  const hasValidFeaturedImage = newsletter.featuredImage && 
+    newsletter.featuredImage.url && 
+    newsletter.featuredImage.url.trim().length > 0;
+  
+  return hasValidHyperlinks && hasValidFeaturedImage;
 }
 
 export async function generateNewsletter(userQuery: string, articles: Article[]): Promise<GeneratedNewsletter> {
@@ -260,7 +272,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                     },
                     featuredImage: {
                       type: 'object',
-                      description: 'Optional featured image from one of the articles',
+                      description: 'Required featured image from one of the articles',
                       properties: {
                         url: {
                           type: 'string',
@@ -349,7 +361,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                       description: 'Newsletter closing/signoff'
                     }
                   },
-                  required: ['subject', 'theming', 'thematicIntro', 'sections', 'actionableAdvice', 'signoff'],
+                  required: ['subject', 'theming', 'thematicIntro', 'featuredImage', 'sections', 'actionableAdvice', 'signoff'],
                   additionalProperties: false
                 }
               }
@@ -399,33 +411,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
   } catch (error) {
     console.error('Error generating newsletter:', error);
     
-    // Fallback newsletter
-    return {
-      subject: `📰 Your ${userQuery} Newsletter`,
-      theming: {
-        overallTheme: `Latest developments in ${userQuery}`,
-        strategy: 'Present key stories without thematic connection due to processing error',
-        angle: 'Informational - basic coverage of recent developments'
-      },
-      thematicIntro: "Here's what we found on your topic:",
-      featuredImage: undefined,
-      sections: articles.slice(0, 3).map((article, index) => ({
-        heading: article.title,
-        contentBlocks: [
-          {
-            type: 'paragraph' as const,
-            content: article.excerpt || 'Full content unavailable'
-          }
-        ],
-        hyperlinks: [
-          {
-            linkText: article.title,
-            url: article.url
-          }
-        ]
-      })),
-      actionableAdvice: 'Stay tuned for more updates on ' + userQuery,
-      signoff: 'Until next time!\n\nThe Hustle Team'
-    };
+    // No fallback - throw error to ensure proper validation
+    throw error;
   }
 }
