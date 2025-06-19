@@ -117,7 +117,7 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
           }
         ],
         temperature: 0.3,
-        max_tokens: 16000,
+        max_tokens: 65000,
         response_format: {
           type: 'json_schema',
           json_schema: {
