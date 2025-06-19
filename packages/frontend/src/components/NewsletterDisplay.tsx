@@ -97,6 +97,22 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     <div class="signoff">
         ${newsletter.signoff.replace(/\n/g, '<br>')}
     </div>
+    
+    ${newsletter.sources && newsletter.sources.length > 0 ? `
+    <div class="sources-section" style="margin-top: 30px; padding: 20px; background-color: #fff7ed; border-left: 4px solid #ea580c; border-radius: 8px;">
+        <h3 style="color: #ea580c; margin-top: 0; margin-bottom: 15px; font-size: 1.2em;">📚 Sources</h3>
+        <ul style="margin: 0; padding-left: 20px;">
+            ${newsletter.sources.map(source => `
+            <li style="margin-bottom: 8px;">
+                <a href="${source.url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                    ${source.title}
+                </a>
+                <span style="color: #6b7280; font-size: 0.9em;"> - ${source.source}</span>
+            </li>
+            `).join('')}
+        </ul>
+    </div>
+    ` : ''}
 </body>
 </html>`;
 
@@ -270,7 +286,15 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     
     content += `## Your Move\n\n`;
     content += `${newsletter.actionableAdvice}\n\n`;
-    content += `---\n${newsletter.signoff}`;
+    content += `---\n${newsletter.signoff}\n\n`;
+    
+    // Sources section
+    if (newsletter.sources && newsletter.sources.length > 0) {
+      content += `> **📚 Sources**\n>\n`;
+      newsletter.sources.forEach(source => {
+        content += `> • [${source.title}](${source.url}) - ${source.source}\n`;
+      });
+    }
     
     return content;
   };
@@ -316,6 +340,33 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
           <div className="prose prose-gray max-w-none">
             {renderContent(formatNewsletter())}
           </div>
+          
+          {/* Sources section */}
+          {newsletter.sources && newsletter.sources.length > 0 && (
+            <div className="mt-8 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-lg">
+              <h3 className="text-orange-700 font-semibold text-lg mb-3 flex items-center">
+                📚 Sources
+              </h3>
+              <ul className="space-y-2">
+                {newsletter.sources.map((source, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="text-orange-500 mr-2 mt-1">•</span>
+                    <div>
+                      <a 
+                        href={source.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 font-medium underline"
+                      >
+                        {source.title}
+                      </a>
+                      <span className="text-gray-600 text-sm ml-2">- {source.source}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

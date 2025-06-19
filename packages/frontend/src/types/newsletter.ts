@@ -27,6 +27,12 @@ export interface FeaturedImage {
   source: string;
 }
 
+export interface SourceArticle {
+  title: string;
+  url: string;
+  source: string;
+}
+
 export interface Newsletter {
   subject: string;
   theming: Theming;
@@ -35,6 +41,7 @@ export interface Newsletter {
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;
+  sources: SourceArticle[];
   markdown?: string;
 }
 

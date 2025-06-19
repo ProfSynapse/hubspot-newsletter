@@ -123,6 +123,14 @@ describe('Newsletter Generator', () => {
     
     expect(Array.isArray(newsletter.sections)).toBe(true);
     expect(newsletter.sections.length).toBeGreaterThan(0);
+    
+    // Check that sources are automatically added from the articles
+    expect(newsletter).toHaveProperty('sources');
+    expect(Array.isArray(newsletter.sources)).toBe(true);
+    expect(newsletter.sources.length).toBe(sampleArticles.length);
+    expect(newsletter.sources[0]).toHaveProperty('title');
+    expect(newsletter.sources[0]).toHaveProperty('url');
+    expect(newsletter.sources[0]).toHaveProperty('source');
   }, 30000);
 
   test('should handle different query types', async () => {

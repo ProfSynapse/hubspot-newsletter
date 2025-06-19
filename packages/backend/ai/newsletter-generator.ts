@@ -38,7 +38,13 @@ interface FeaturedImage {
   source: string;
 }
 
-interface GeneratedNewsletter {
+interface SourceArticle {
+  title: string;
+  url: string;
+  source: string;
+}
+
+interface LLMNewsletterResponse {
   subject: string;
   theming: Theming;
   thematicIntro: string;
@@ -46,6 +52,10 @@ interface GeneratedNewsletter {
   sections: NewsletterSection[];
   actionableAdvice: string;
   signoff: string;
+}
+
+interface GeneratedNewsletter extends LLMNewsletterResponse {
+  sources: SourceArticle[];
 }
 
 function createNewsletterPrompt(articles: Article[]): string {
@@ -70,8 +80,8 @@ function createNewsletterPrompt(articles: Article[]): string {
   }).join('\n\n');
 
   return `
-  # MISSION
-  Act as a professional newsletter copywriter for Hubspot's "The Hustle". Your job is to create a personalized newsletter based on the user's query/interests. The user will provide their specific topic or area of interest, and you should tailor the newsletter to focus on that topic using the provided news articles.
+# MISSION
+Act as a professional newsletter copywriter for Hubspot's "The Hustle". Your job is to create a personalized newsletter based on the user's query/interests. The user will provide their specific topic or area of interest, and you should tailor the newsletter to focus on that topic using the provided news articles.
 
 <News>
 ${articlesContext}
@@ -151,9 +161,7 @@ Generate a JSON response with this structure:
   "signoff": "Newsletter closing"
 }
 
-EXAMPLE OUTPUTS:
-
-Example 1 - Smart Glasses Theme:
+# EXAMPLE OUTPUTS
 {
   "subject": "🤖 The Smart Glasses Comeback Nobody Expected",
   "theming": {
@@ -398,20 +406,30 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         const content = response.data.choices[0].message.content;
         console.log('Raw LLM Response:', content);
         
-        const parseResult = parseJsonWithFallback<GeneratedNewsletter>(content);
+        const parseResult = parseJsonWithFallback<LLMNewsletterResponse>(content);
         
         if (parseResult.success) {
-          const newsletter = parseResult.data!;
-          console.log('Parsed Newsletter JSON:', JSON.stringify(newsletter, null, 2));
+          const llmResponse = parseResult.data!;
+          console.log('Parsed Newsletter JSON:', JSON.stringify(llmResponse, null, 2));
           
           // Post-process to remove any markdown formatting that slipped through
-          if (newsletter.featuredImage?.caption) {
-            newsletter.featuredImage.caption = newsletter.featuredImage.caption
+          if (llmResponse.featuredImage?.caption) {
+            llmResponse.featuredImage.caption = llmResponse.featuredImage.caption
               .replace(/^\*+|\*+$/g, '') // Remove asterisks from start/end
               .replace(/^_+|_+$/g, '') // Remove underscores from start/end
               .trim();
           }
           
+          // Create final newsletter with systematically added sources
+          const newsletter: GeneratedNewsletter = {
+            ...llmResponse,
+            sources: articles.map(article => ({
+              title: article.title,
+              url: article.url,
+              source: article.source
+            }))
+          };
+
           // Log validation status
           const validationResult = validateNewsletter(newsletter);
           console.log('Validation Result:', validationResult);
