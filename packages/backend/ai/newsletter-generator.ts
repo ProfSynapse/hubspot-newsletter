@@ -381,10 +381,13 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         );
 
         const content = response.data.choices[0].message.content;
+        console.log('Raw LLM Response:', content);
+        
         const parseResult = parseJsonWithFallback<GeneratedNewsletter>(content);
         
         if (parseResult.success) {
           const newsletter = parseResult.data!;
+          console.log('Parsed Newsletter JSON:', JSON.stringify(newsletter, null, 2));
           
           // Post-process to remove any markdown formatting that slipped through
           if (newsletter.featuredImage?.caption) {
@@ -392,6 +395,20 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
               .replace(/^\*+|\*+$/g, '') // Remove asterisks from start/end
               .replace(/^_+|_+$/g, '') // Remove underscores from start/end
               .trim();
+          }
+          
+          // Log validation status
+          const validationResult = validateNewsletter(newsletter);
+          console.log('Validation Result:', validationResult);
+          if (!validationResult) {
+            console.log('Validation failed - checking details:');
+            newsletter.sections.forEach((section, index) => {
+              console.log(`Section ${index} (${section.heading}):`, {
+                hyperlinksCount: section.hyperlinks?.length || 0,
+                hyperlinks: section.hyperlinks
+              });
+            });
+            console.log('Featured Image:', newsletter.featuredImage);
           }
           
           return newsletter;
