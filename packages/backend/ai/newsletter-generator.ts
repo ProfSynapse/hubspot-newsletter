@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'openai/gpt-4.1-mini';
+const MODEL = 'google/gemini-2.5-flash';
 
 interface ContentBlock {
   type: 'paragraph' | 'bulletList';
