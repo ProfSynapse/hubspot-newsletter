@@ -204,9 +204,9 @@ function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
   );
   
   // Check that there is a featured image with valid url
-  const hasValidFeaturedImage = newsletter.featuredImage && 
+  const hasValidFeaturedImage = !!(newsletter.featuredImage && 
     newsletter.featuredImage.url && 
-    newsletter.featuredImage.url.trim().length > 0;
+    newsletter.featuredImage.url.trim().length > 0);
   
   return hasValidHyperlinks && hasValidFeaturedImage;
 }
