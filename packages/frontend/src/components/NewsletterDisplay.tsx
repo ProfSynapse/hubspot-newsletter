@@ -286,15 +286,7 @@ const NewsletterDisplay: React.FC<NewsletterDisplayProps> = ({
     
     content += `## Your Move\n\n`;
     content += `${newsletter.actionableAdvice}\n\n`;
-    content += `---\n${newsletter.signoff}\n\n`;
-    
-    // Sources section
-    if (newsletter.sources && newsletter.sources.length > 0) {
-      content += `> **📚 Sources**\n>\n`;
-      newsletter.sources.forEach(source => {
-        content += `> • [${source.title}](${source.url}) - ${source.source}\n`;
-      });
-    }
+    content += `---\n${newsletter.signoff}`;
     
     return content;
   };
