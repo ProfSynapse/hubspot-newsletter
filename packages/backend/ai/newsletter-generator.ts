@@ -106,6 +106,7 @@ ${articlesContext}
 5. Mix paragraphs and bullet points naturally - flexible ordering
 6. REQUIRED: Each section MUST have at least one hyperlink to source articles
 7. Actionable business advice that's specific and practical
+8. Only output ONE newsletter - do not include multiple versions or drafts.
 
 # GUIDELINES 
 - All fields will contain plain text only. Do not use markdown formatting (no asterisks, underscores, etc.) in captions or any other fields.
