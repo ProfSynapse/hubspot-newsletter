@@ -126,6 +126,8 @@ function cleanJsonString(text: string): string {
     // Fix semicolons that should be commas in arrays/objects
     .replace(/;(\s*[}\]])/g, '$1')
     .replace(/;(\s*")/g, ',$1')
+    // Fix semicolon followed by comma (malformed JSON)
+    .replace(/;,/g, ',')
     // Remove trailing commas before closing braces/brackets
     .replace(/,(\s*[}\]])/g, '$1');
 }
