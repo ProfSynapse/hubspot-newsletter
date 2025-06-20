@@ -97,12 +97,13 @@ ${articlesContext}
 - Connect stories to broader themes, not just list headlines
 - Use phrases like "kinda nice", "pretty frustrating" for casual tone
 - Always explain business impact - "why it matters" thinking
+- Creative connection-making: Find unexpected angles to tie diverse articles to the user's topic
 
 # STRUCTURE
-1. FIRST: Analyze the articles and identify a connecting theme that relates to the user's query
-2. Thematic intro (no heading) - sets up the big picture story around the user's topic of interest
+1. FIRST: Analyze the articles and identify a connecting theme that relates to the user's query - be creative in finding connections even if articles are tangentially related
+2. Thematic intro (no heading) - sets up the big picture story around the user's topic of interest, creatively tying together diverse articles
 3. REQUIRED: Include a featured image using ONLY one of the provided image URLs from the articles (do not create or infer URLs)
-4. 3-4 themed sections with headings that explore different angles
+4. 3-4 themed sections with headings that explore different angles - use creative framing to connect tangential content to the main topic
 5. Mix paragraphs and bullet points naturally - flexible ordering
 6. REQUIRED: Each section MUST have at least one hyperlink to source articles
 7. Actionable business advice that's specific and practical

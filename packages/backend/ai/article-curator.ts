@@ -32,21 +32,23 @@ ${articlesContext}
 </articles>
 
 # INSTRUCTIONS
-1. First, determine if ANY articles are genuinely relevant to the user's query
+1. First, determine if ANY articles are relevant or potentially relevant to the user's query
 2. Consider our source focus areas when evaluating relevance
-3. Set hasRelevantArticles to true ONLY if you find articles directly related to the topic
-4. Set hasRelevantArticles to false if articles are only tangentially related or completely off-topic
+3. Set hasRelevantArticles to true if you find articles directly OR tangentially related to the topic
+4. Set hasRelevantArticles to false only if articles are completely off-topic or unrelated
+5. Be more inclusive with relevance - consider broader connections and potential angles
 
 ## SELECTION CRITERIA 
 If relevant articles exist:
-- Select only the 3-8 MOST relevant articles (never more than 8)
-- Direct relevance to the user's interests
+- Select 3-8 articles that are relevant OR can be made relevant through creative connections
+- Direct relevance to the user's interests (preferred but not required)
+- Tangential relevance that can be tied to the topic with creative framing
 - Business impact and importance
 - Timeliness and newsworthiness
 - Diversity of perspectives/sources
 - Actionable insights potential
 
-**IMPORTANT:** Return maximum 8 articles. Quality over quantity.
+**IMPORTANT:** Return maximum 8 articles. Be more inclusive in your selections - articles don't need to be perfectly aligned.
 
 ## REASONING FIELD
 - If hasRelevantArticles is TRUE: Explain why you selected these specific articles and how they relate to the query
@@ -56,9 +58,9 @@ If relevant articles exist:
 
 Query: "quantum computing startups"
 Response: {
-  "hasRelevantArticles": false,
-  "reasoning": "None of the available articles discuss quantum computing, quantum technology, or related startups. Our sources focus on mainstream tech like AI, SaaS, and fintech. Consider searching for topics like AI startups, machine learning funding, or general tech innovation instead.",
-  "articleIds": []
+  "hasRelevantArticles": true,
+  "reasoning": "While no articles directly cover quantum computing, I found 3 tech startup articles that discuss emerging technologies, venture capital trends, and innovative computing approaches that can be framed within the quantum computing context.",
+  "articleIds": [2, 7, 11]
 }
 
 Query: "AI funding rounds"
@@ -71,18 +73,18 @@ Response: {
 Query: "remote work trends"
 Response: {
   "hasRelevantArticles": true,
-  "reasoning": "Found 3 articles discussing how companies are adapting workplace policies, hybrid work models, and the business impact of remote work on productivity and hiring.",
-  "articleIds": [3, 7, 14]
+  "reasoning": "Found 5 articles that can address remote work: 3 directly discuss workplace policies and hybrid models, plus 2 about productivity tools and business adaptation strategies that relate to remote work challenges.",
+  "articleIds": [3, 7, 14, 18, 21]
 }
 
 Query: "celebrity gossip"
 Response: {
   "hasRelevantArticles": false,
-  "reasoning": "Our sources (TechCrunch, CNBC, HBR, etc.) focus on business, tech, and finance news, not entertainment or celebrity content. Try searching for tech company news, startup stories, or business trends instead.",
+  "reasoning": "Our business and tech sources don't cover celebrity content, and there's no meaningful way to connect entertainment gossip to business insights or tech trends.",
   "articleIds": []
 }
 
-**IMPORTANT:** It's better to return no articles than to force irrelevant content. Be honest about relevance.
+**IMPORTANT:** Be creative in finding connections. Articles can be tangentially related as long as they can be meaningfully tied to the user's topic.
 
 Return ONLY valid JSON. No markdown, no code blocks, no extra text.`;
 }
