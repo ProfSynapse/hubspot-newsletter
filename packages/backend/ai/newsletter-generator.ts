@@ -229,6 +229,77 @@ ${articlesContext}
 - Use the article URLs provided above for your hyperlinks`;
 }
 
+// Function to detect if response was truncated mid-generation
+function detectTruncatedResponse(content: string): { truncated: boolean; reason?: string } {
+  if (!content || content.length === 0) {
+    return { truncated: true, reason: 'Empty response' };
+  }
+
+  const trimmed = content.trim();
+  
+  // Check for common truncation patterns
+  const truncationIndicators = [
+    // JSON ends abruptly without proper closing
+    /[^}]\s*$/,
+    // URL ends with semicolon (common AI mistake when truncated)
+    /"url":\s*"[^"]*";?\s*$/,
+    // Field ends without closing quote
+    /"[^"]*:\s*"[^"]*$/,
+    // Incomplete closing braces (less closing than opening)
+    /^\{[\s\S]*[^}]$/
+  ];
+
+  for (const indicator of truncationIndicators) {
+    if (indicator.test(trimmed)) {
+      return { truncated: true, reason: 'Pattern indicates truncation' };
+    }
+  }
+
+  // Count braces to see if they're balanced
+  let openBraces = 0;
+  let closeBraces = 0;
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = 0; i < trimmed.length; i++) {
+    const char = trimmed[i];
+    
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escapeNext = true;
+      continue;
+    }
+    
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+    
+    if (!inString) {
+      if (char === '{') openBraces++;
+      if (char === '}') closeBraces++;
+    }
+  }
+
+  if (openBraces > closeBraces) {
+    return { truncated: true, reason: `Unbalanced braces: ${openBraces} open, ${closeBraces} close` };
+  }
+
+  // Check for expected required fields in a complete newsletter
+  const requiredFields = ['subject', 'sections', 'actionableAdvice', 'signoff'];
+  const missingFields = requiredFields.filter(field => !trimmed.includes(`"${field}"`));
+  
+  if (missingFields.length > 0) {
+    return { truncated: true, reason: `Missing required fields: ${missingFields.join(', ')}` };
+  }
+
+  return { truncated: false };
+}
+
 // Validation function to ensure newsletter has required hyperlinks and image
 function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
   // Check that newsletter has basic structure
@@ -300,14 +371,16 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
             role: 'user',
             content: `The previous response had an error: ${lastError}. 
 
-CRITICAL: You must return ONLY valid JSON. Common errors to avoid:
+CRITICAL: You must return ONLY valid, COMPLETE JSON. Common errors to avoid:
 - NO trailing semicolons in URLs (use "url": "https://example.com" NOT "url": "https://example.com";)
 - NO missing commas between objects
 - NO duplicate or malformed structure
 - Ensure all content blocks have at least one hyperlink
 - Featured image URL must be valid and from provided articles
+- COMPLETE the entire JSON structure - do not stop mid-response
+- Ensure proper closing braces for all objects and arrays
 
-Return ONLY the JSON object, no extra text or formatting.`
+Return ONLY the complete JSON object with all required fields, no extra text or formatting.`
           });
         }
 
@@ -317,7 +390,7 @@ Return ONLY the JSON object, no extra text or formatting.`
             model: MODEL,
             messages,
             temperature: 0.3,
-            max_tokens: 4000,
+            max_tokens: 6000,
             response_format: {
               type: 'json_schema',
               json_schema: {
@@ -500,6 +573,16 @@ Return ONLY the JSON object, no extra text or formatting.`
         const content = response.data.choices[0].message.content;
         console.log('Raw LLM Response:', content);
         lastResponse = content;
+        
+        // Check for truncated response indicators
+        const isTruncated = detectTruncatedResponse(content);
+        if (isTruncated.truncated) {
+          const errorMsg = `Response appears to be truncated: ${isTruncated.reason}. Content length: ${content.length}`;
+          lastError = errorMsg;
+          console.warn('Detected truncated response:', isTruncated.reason);
+          console.warn('Last 200 chars:', content.slice(-200));
+          throw new Error(errorMsg);
+        }
         
         const parseResult = parseJsonWithFallback<LLMNewsletterResponse>(content);
         console.log('Parse Result:', { success: parseResult.success, error: parseResult.error });

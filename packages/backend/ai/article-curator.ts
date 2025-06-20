@@ -99,8 +99,6 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
     };
   }
 
-  // If we have 6 or fewer articles, still run through AI to check relevance
-  // Removed automatic return of all articles
 
   const prompt = createCurationPrompt(articles);
   let lastResponse: string | undefined;
