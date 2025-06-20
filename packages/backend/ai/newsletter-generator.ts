@@ -270,15 +270,14 @@ function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
 }
 
 export async function generateNewsletter(articles: Article[]): Promise<GeneratedNewsletter> {
-  try {
-    const systemPrompt = createSystemPrompt();
-    const userMessage = createUserMessage(articles);
-    let lastResponse: string | undefined;
-    let lastError: string | undefined;
-    
-    // Use retry logic for more reliable generation
-    return await retryAIGeneration(
-      async () => {
+  const systemPrompt = createSystemPrompt();
+  const userMessage = createUserMessage(articles);
+  let lastResponse: string | undefined;
+  let lastError: string | undefined;
+  
+  // Use retry logic for more reliable generation
+  return await retryAIGeneration(
+    async () => {
         // Build messages array with original prompt and error feedback if retrying
         const messages: Array<{ role: string; content: string }> = [
           {
@@ -299,7 +298,16 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
           });
           messages.push({
             role: 'user',
-            content: `The previous response had an error: ${lastError}. Please fix the issue and provide a valid JSON response following the exact schema requirements. Ensure all content blocks have at least one hyperlink, and the featured image URL is valid and from one of the provided articles.`
+            content: `The previous response had an error: ${lastError}. 
+
+CRITICAL: You must return ONLY valid JSON. Common errors to avoid:
+- NO trailing semicolons in URLs (use "url": "https://example.com" NOT "url": "https://example.com";)
+- NO missing commas between objects
+- NO duplicate or malformed structure
+- Ensure all content blocks have at least one hyperlink
+- Featured image URL must be valid and from provided articles
+
+Return ONLY the JSON object, no extra text or formatting.`
           });
         }
 
@@ -546,9 +554,22 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
           
           return newsletter;
         } else {
-          const errorMsg = `JSON parsing failed: ${parseResult.error}. Content preview: ${content.substring(0, 200)}`;
+          // Enhanced error detection for JSON syntax issues
+          let syntaxHints = [];
+          if (content.includes('";')) {
+            syntaxHints.push('Contains trailing semicolons in URLs');
+          }
+          if (content.match(/}\s*{/)) {
+            syntaxHints.push('Missing commas between objects');
+          }
+          if (content.includes(',,')) {
+            syntaxHints.push('Double commas detected');
+          }
+          
+          const errorMsg = `JSON parsing failed: ${parseResult.error}${syntaxHints.length > 0 ? '. Syntax issues: ' + syntaxHints.join(', ') : ''}. Content preview: ${content.substring(0, 200)}`;
           lastError = errorMsg;
           console.warn('Failed to parse AI response as JSON:', parseResult.error);
+          console.warn('Syntax hints:', syntaxHints);
           console.warn('Original content length:', content.length);
           console.warn('First 500 chars:', content.substring(0, 500));
           throw new Error(errorMsg);
@@ -564,10 +585,4 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
         }
       }
     );
-  } catch (error) {
-    console.error('Error generating newsletter:', error);
-    
-    // No fallback - throw error to ensure proper validation
-    throw error;
-  }
 }

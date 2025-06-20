@@ -91,23 +91,22 @@ Return ONLY valid JSON. No markdown, no code blocks, no extra text.`;
 }
 
 export async function curateArticles(userQuery: string, articles: Article[]): Promise<{ articleIds: number[], hasRelevantArticles: boolean, reasoning: string }> {
-  try {
-    if (articles.length === 0) {
-      return {
-        articleIds: [],
-        hasRelevantArticles: false,
-        reasoning: "No articles available in the database to analyze."
-      };
-    }
+  if (articles.length === 0) {
+    return {
+      articleIds: [],
+      hasRelevantArticles: false,
+      reasoning: "No articles available in the database to analyze."
+    };
+  }
 
-    // If we have 6 or fewer articles, still run through AI to check relevance
-    // Removed automatic return of all articles
+  // If we have 6 or fewer articles, still run through AI to check relevance
+  // Removed automatic return of all articles
 
-    const prompt = createCurationPrompt(articles);
-    let lastResponse: string | undefined;
-    let lastError: string | undefined;
-    
-    const curationResult = await retryAIGeneration(
+  const prompt = createCurationPrompt(articles);
+  let lastResponse: string | undefined;
+  let lastError: string | undefined;
+  
+  const curationResult = await retryAIGeneration(
       async () => {
         // Build messages array with original prompt and error feedback if retrying
         const messages: Array<{ role: string; content: string }> = [
@@ -261,15 +260,4 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
       hasRelevantArticles: true,
       reasoning: curationResult.reasoning
     };
-    
-  } catch (error) {
-    console.error('Error in AI article curation:', error);
-    
-    // Fallback: return empty to indicate error
-    return {
-      articleIds: [],
-      hasRelevantArticles: false,
-      reasoning: "Unable to determine article relevance due to a technical error. Please try again."
-    };
-  }
 }
