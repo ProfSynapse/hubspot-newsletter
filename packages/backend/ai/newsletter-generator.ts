@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-2.5-flash';
+const MODEL = 'openai/gpt-4.1-mini';
 
 interface Hyperlink {
   linkText: string;
@@ -343,46 +343,81 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                             type: 'array',
                             description: 'Array of content blocks (paragraphs and bullet lists)',
                             items: {
-                              type: 'object',
-                              properties: {
-                                type: {
-                                  type: 'string',
-                                  enum: ['paragraph', 'bulletList'],
-                                  description: 'Type of content block'
+                              anyOf: [
+                                {
+                                  type: 'object',
+                                  properties: {
+                                    type: {
+                                      type: 'string',
+                                      enum: ['paragraph'],
+                                      description: 'Type of content block'
+                                    },
+                                    content: {
+                                      type: 'string',
+                                      description: 'Paragraph content (for paragraph type)'
+                                    },
+                                    hyperlinks: {
+                                      type: 'array',
+                                      description: 'Array of hyperlinks for this content block',
+                                      items: {
+                                        type: 'object',
+                                        properties: {
+                                          linkText: {
+                                            type: 'string',
+                                            description: 'Exact text to hyperlink within this content block'
+                                          },
+                                          url: {
+                                            type: 'string',
+                                            description: 'Source article URL'
+                                          }
+                                        },
+                                        required: ['linkText', 'url'],
+                                        additionalProperties: false
+                                      }
+                                    }
+                                  },
+                                  required: ['type', 'content', 'hyperlinks'],
+                                  additionalProperties: false
                                 },
-                                content: {
-                                  type: 'string',
-                                  description: 'Paragraph content (for paragraph type)'
-                                },
-                                items: {
-                                  type: 'array',
-                                  description: 'Array of bullet point items (for bulletList type)',
-                                  items: {
-                                    type: 'string'
-                                  }
-                                },
-                                hyperlinks: {
-                                  type: 'array',
-                                  description: 'Array of hyperlinks for this content block',
-                                  items: {
-                                    type: 'object',
-                                    properties: {
-                                      linkText: {
-                                        type: 'string',
-                                        description: 'Exact text to hyperlink within this content block'
-                                      },
-                                      url: {
-                                        type: 'string',
-                                        description: 'Source article URL'
+                                {
+                                  type: 'object',
+                                  properties: {
+                                    type: {
+                                      type: 'string',
+                                      enum: ['bulletList'],
+                                      description: 'Type of content block'
+                                    },
+                                    items: {
+                                      type: 'array',
+                                      description: 'Array of bullet point items (for bulletList type)',
+                                      items: {
+                                        type: 'string'
                                       }
                                     },
-                                    required: ['linkText', 'url'],
-                                    additionalProperties: false
-                                  }
+                                    hyperlinks: {
+                                      type: 'array',
+                                      description: 'Array of hyperlinks for this content block',
+                                      items: {
+                                        type: 'object',
+                                        properties: {
+                                          linkText: {
+                                            type: 'string',
+                                            description: 'Exact text to hyperlink within this content block'
+                                          },
+                                          url: {
+                                            type: 'string',
+                                            description: 'Source article URL'
+                                          }
+                                        },
+                                        required: ['linkText', 'url'],
+                                        additionalProperties: false
+                                      }
+                                    }
+                                  },
+                                  required: ['type', 'items', 'hyperlinks'],
+                                  additionalProperties: false
                                 }
-                              },
-                              required: ['type'],
-                              additionalProperties: false
+                              ]
                             }
                           }
                         },
