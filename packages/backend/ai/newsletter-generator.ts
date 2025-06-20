@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'anthropic/claude-sonnet-4';
+const MODEL = 'google/gemini-2.5-flash';
 
 interface Hyperlink {
   linkText: string;
@@ -219,11 +219,21 @@ Generate a JSON response with this structure:
 
 // Validation function to ensure newsletter has required hyperlinks and image
 function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
+  // Check that newsletter has basic structure
+  if (!newsletter || !newsletter.sections || !Array.isArray(newsletter.sections)) {
+    console.log('Validation failed: Missing or invalid sections array');
+    return false;
+  }
+  
   // Check that every section has at least one content block with hyperlinks
   const hasValidHyperlinks = newsletter.sections.every(section => {
+    if (!section || !section.contentBlocks || !Array.isArray(section.contentBlocks)) {
+      return false;
+    }
     // At least one content block in the section must have hyperlinks
     return section.contentBlocks.some(block => 
       block.hyperlinks && 
+      Array.isArray(block.hyperlinks) &&
       block.hyperlinks.length > 0 &&
       block.hyperlinks.every(link => 
         link.linkText && link.linkText.trim().length > 0 &&
@@ -262,7 +272,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
               }
             ],
             temperature: 0.3,
-            max_tokens: 1000,
+            max_tokens: 4000,
             response_format: {
               type: 'json_schema',
               json_schema: {
@@ -409,6 +419,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
         console.log('Raw LLM Response:', content);
         
         const parseResult = parseJsonWithFallback<LLMNewsletterResponse>(content);
+        console.log('Parse Result:', { success: parseResult.success, error: parseResult.error });
         
         if (parseResult.success) {
           const llmResponse = parseResult.data!;
@@ -452,8 +463,9 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
           return newsletter;
         } else {
           console.warn('Failed to parse AI response as JSON:', parseResult.error);
-          console.warn('Original content:', parseResult.originalText);
-          throw new Error(`JSON parsing failed: ${parseResult.error}`);
+          console.warn('Original content length:', content.length);
+          console.warn('First 500 chars:', content.substring(0, 500));
+          throw new Error(`JSON parsing failed: ${parseResult.error}. Content preview: ${content.substring(0, 200)}`);
         }
       },
       validateNewsletter,
