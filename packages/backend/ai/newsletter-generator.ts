@@ -88,7 +88,8 @@ Act as a professional newsletter copywriter for Hubspot's "The Hustle". Your job
 # GUIDELINES 
 - All fields will contain plain text only. Do not use markdown formatting (no asterisks, underscores, etc.) in captions or any other fields.
 - Image captions must be plain text without any asterisks (*) or underscores (_) or other formatting.
-- Every section MUST include at least one content block with hyperlinks - this is required for proper citation.
+- CRITICAL: Every content block (paragraph and bulletList) MUST include at least one hyperlink in its hyperlinks array - this is mandatory for proper citation and validation.
+- CRITICAL: No content block should have an empty hyperlinks array. Always include relevant source links.
 - Hyperlinks should be attached to the specific content block where they are referenced.
 
 # JSON OUTPUT
@@ -220,7 +221,12 @@ function createUserMessage(articles: Article[]): string {
 ${articlesContext}
 </News>
 
-**MANDATORY**: enerate a newsletter following the JSON structure specified in your instructions.`;
+**MANDATORY**: Generate a newsletter following the JSON structure specified in your instructions.
+
+**CRITICAL VALIDATION REQUIREMENTS**:
+- Every single content block (paragraph or bulletList) MUST have at least one hyperlink in its hyperlinks array
+- No content block should have an empty hyperlinks array - always include relevant source article links
+- Use the article URLs provided above for your hyperlinks`;
 }
 
 // Validation function to ensure newsletter has required hyperlinks and image
@@ -231,21 +237,28 @@ function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
     return false;
   }
   
-  // Check that every section has at least one content block with hyperlinks
-  const hasValidHyperlinks = newsletter.sections.every(section => {
+  // Check that every content block has hyperlinks (stricter validation)
+  const hasValidHyperlinks = newsletter.sections.every((section, sectionIndex) => {
     if (!section || !section.contentBlocks || !Array.isArray(section.contentBlocks)) {
+      console.log(`Validation failed: Section ${sectionIndex} missing content blocks`);
       return false;
     }
-    // At least one content block in the section must have hyperlinks
-    return section.contentBlocks.some(block => 
-      block.hyperlinks && 
-      Array.isArray(block.hyperlinks) &&
-      block.hyperlinks.length > 0 &&
-      block.hyperlinks.every(link => 
-        link.linkText && link.linkText.trim().length > 0 &&
-        link.url && link.url.trim().length > 0
-      )
-    );
+    // Every content block must have hyperlinks
+    return section.contentBlocks.every((block, blockIndex) => {
+      const hasValidLinks = block.hyperlinks && 
+        Array.isArray(block.hyperlinks) &&
+        block.hyperlinks.length > 0 &&
+        block.hyperlinks.every(link => 
+          link.linkText && link.linkText.trim().length > 0 &&
+          link.url && link.url.trim().length > 0
+        );
+      
+      if (!hasValidLinks) {
+        console.log(`Validation failed: Section ${sectionIndex} (${section.heading}), Block ${blockIndex} (${block.type}) has no valid hyperlinks`);
+      }
+      
+      return hasValidLinks;
+    });
   });
   
   // Check that there is a featured image with valid url
@@ -365,7 +378,8 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
                                     },
                                     hyperlinks: {
                                       type: 'array',
-                                      description: 'Array of hyperlinks for this content block',
+                                      description: 'REQUIRED: Array of hyperlinks for this content block - must contain at least one hyperlink',
+                                      minItems: 1,
                                       items: {
                                         type: 'object',
                                         properties: {
@@ -403,7 +417,8 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
                                     },
                                     hyperlinks: {
                                       type: 'array',
-                                      description: 'Array of hyperlinks for this content block',
+                                      description: 'REQUIRED: Array of hyperlinks for this content block - must contain at least one hyperlink',
+                                      minItems: 1,
                                       items: {
                                         type: 'object',
                                         properties: {
