@@ -58,34 +58,10 @@ interface GeneratedNewsletter extends LLMNewsletterResponse {
   sources: SourceArticle[];
 }
 
-function createNewsletterPrompt(articles: Article[]): string {
-  const articlesContext = articles.map((article, index) => {
-    let context = `Article ${index + 1}:
-    Title: ${article.title}
-    Source: ${article.source}
-    URL: ${article.url}
-    Content: ${article.content || article.excerpt || 'Content not available'}
-    Published: ${article.published_at}`;
-    
-    if (article.images && article.images.length > 0) {
-      context += `
-    Available Images:`;
-      article.images.forEach((img, imgIndex) => {
-        context += `
-      - Image ${imgIndex + 1}: ${img.url}${img.alt ? ` (Alt: ${img.alt})` : ''}`;
-      });
-    }
-    
-    return context;
-  }).join('\n\n');
-
+function createSystemPrompt(): string {
   return `
 # MISSION
-Act as a professional newsletter copywriter for Hubspot's "The Hustle". Your job is to create a personalized newsletter based on the user's query/interests. The user will provide their specific topic or area of interest, and you should tailor the newsletter to focus on that topic using the provided news articles.
-
-<News>
-${articlesContext}
-</News>
+Act as a professional newsletter copywriter for Hubspot's "The Hustle". Your job is to create a personalized newsletter based on the provided news articles. The user will provide the articles in their message, and you should create a newsletter that connects these articles thematically.
 
 # THE HUSTLE'S STYLE
 - Conversational but informed ("For years, smart glasses have been little more than a joke")
@@ -100,8 +76,8 @@ ${articlesContext}
 - Creative connection-making: Find unexpected angles to tie diverse articles to the user's topic
 
 # STRUCTURE
-1. FIRST: Analyze the articles and identify a connecting theme that relates to the user's query - be creative in finding connections even if articles are tangentially related
-2. Thematic intro (no heading) - sets up the big picture story around the user's topic of interest, creatively tying together diverse articles
+1. FIRST: Analyze the articles and identify a connecting theme - be creative in finding connections even if articles are tangentially related
+2. Thematic intro (no heading) - sets up the big picture story, creatively tying together diverse articles
 3. REQUIRED: Include a featured image using ONLY one of the provided image URLs from the articles (do not create or infer URLs)
 4. 3-4 themed sections with headings that explore different angles - use creative framing to connect tangential content to the main topic
 5. Mix paragraphs and bullet points naturally - flexible ordering
@@ -217,6 +193,36 @@ Generate a JSON response with this structure:
 }`;
 }
 
+function createUserMessage(articles: Article[]): string {
+  const articlesContext = articles.map((article, index) => {
+    let context = `Article ${index + 1}:
+    Title: ${article.title}
+    Source: ${article.source}
+    URL: ${article.url}
+    Content: ${article.content || article.excerpt || 'Content not available'}
+    Published: ${article.published_at}`;
+    
+    if (article.images && article.images.length > 0) {
+      context += `
+    Available Images:`;
+      article.images.forEach((img, imgIndex) => {
+        context += `
+      - Image ${imgIndex + 1}: ${img.url}${img.alt ? ` (Alt: ${img.alt})` : ''}`;
+      });
+    }
+    
+    return context;
+  }).join('\n\n');
+
+  return `Here are the news articles to create a newsletter from:
+
+<News>
+${articlesContext}
+</News>
+
+**MANDATORY**: enerate a newsletter following the JSON structure specified in your instructions.`;
+}
+
 // Validation function to ensure newsletter has required hyperlinks and image
 function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
   // Check that newsletter has basic structure
@@ -250,9 +256,10 @@ function validateNewsletter(newsletter: GeneratedNewsletter): boolean {
   return hasValidHyperlinks && hasValidFeaturedImage;
 }
 
-export async function generateNewsletter(userQuery: string, articles: Article[]): Promise<GeneratedNewsletter> {
+export async function generateNewsletter(articles: Article[]): Promise<GeneratedNewsletter> {
   try {
-    const prompt = createNewsletterPrompt(articles);
+    const systemPrompt = createSystemPrompt();
+    const userMessage = createUserMessage(articles);
     
     // Use retry logic for more reliable generation
     return await retryAIGeneration(
@@ -264,11 +271,11 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
             messages: [
               {
                 role: 'system',
-                content: prompt
+                content: systemPrompt
               },
               {
                 role: 'user',
-                content: userQuery
+                content: userMessage
               }
             ],
             temperature: 0.3,
