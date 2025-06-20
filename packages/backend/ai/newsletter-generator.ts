@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-2.5-flash';
+const MODEL = 'google/gemini-2.5-pro';
 
 interface Hyperlink {
   linkText: string;
@@ -271,7 +271,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                 content: userQuery
               }
             ],
-            temperature: 0.3,
+            temperature: 0.1,
             max_tokens: 4000,
             response_format: {
               type: 'json_schema',
