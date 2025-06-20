@@ -271,7 +271,7 @@ export async function generateNewsletter(userQuery: string, articles: Article[])
                 content: userQuery
               }
             ],
-            temperature: 0.1,
+            temperature: 0.3,
             max_tokens: 4000,
             response_format: {
               type: 'json_schema',
