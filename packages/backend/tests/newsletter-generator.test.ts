@@ -100,7 +100,7 @@ describe('Newsletter Generator', () => {
       }
     });
     
-    const newsletter = await generateNewsletter(query, sampleArticles);
+    const newsletter = await generateNewsletter(sampleArticles);
     
     expect(newsletter).toHaveProperty('subject');
     expect(newsletter).toHaveProperty('theming');
@@ -151,7 +151,7 @@ describe('Newsletter Generator', () => {
         }
       });
       
-      const newsletter = await generateNewsletter(query, sampleArticles);
+      const newsletter = await generateNewsletter(sampleArticles);
       
       expect(newsletter.sections.length).toBeGreaterThan(0);
     }
@@ -174,7 +174,7 @@ describe('Newsletter Generator', () => {
       }
     });
     
-    await expect(generateNewsletter('test query', sampleArticles)).rejects.toThrow();
+    await expect(generateNewsletter(sampleArticles)).rejects.toThrow();
     
     // Should have retried 3 times
     expect(mockedAxios.post).toHaveBeenCalledTimes(3);
@@ -191,7 +191,7 @@ describe('Newsletter Generator', () => {
       }
     });
     
-    const newsletter = await generateNewsletter('business automation', sampleArticles);
+    const newsletter = await generateNewsletter(sampleArticles);
     
     newsletter.sections.forEach(section => {
       expect(section).toHaveProperty('heading');
@@ -242,7 +242,7 @@ describe('Newsletter Generator', () => {
       }
     });
     
-    const newsletter = await generateNewsletter('test query', []);
+    const newsletter = await generateNewsletter([]);
     
     expect(newsletter).toHaveProperty('subject');
     expect(newsletter).toHaveProperty('sections');
@@ -273,7 +273,7 @@ describe('Newsletter Generator', () => {
       }
     });
     
-    await expect(generateNewsletter('test query', sampleArticles)).rejects.toThrow();
+    await expect(generateNewsletter(sampleArticles)).rejects.toThrow();
     
     // Should have retried 3 times
     expect(mockedAxios.post).toHaveBeenCalledTimes(3);
@@ -291,7 +291,7 @@ describe('Newsletter Generator', () => {
     const realAxios = require('axios').default;
     
     console.log('Making real API call to OpenRouter...');
-    const newsletter = await generateNewsletter('AI business automation', sampleArticles);
+    const newsletter = await generateNewsletter(sampleArticles);
     
     expect(newsletter).toHaveProperty('subject');
     expect(newsletter).toHaveProperty('sections');

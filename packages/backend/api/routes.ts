@@ -136,7 +136,7 @@ router.post('/generate-from-curated', async (req: Request, res: Response) => {
       });
     }
 
-    const newsletter = await generateNewsletter(query, articles);
+    const newsletter = await generateNewsletter(articles);
     
     console.log('Generated Newsletter being sent to frontend:', JSON.stringify(newsletter, null, 2));
     
@@ -193,7 +193,7 @@ router.post('/generate', async (req: Request, res: Response) => {
       });
     }
 
-    const newsletter = await generateNewsletter(query, articles);
+    const newsletter = await generateNewsletter(articles);
     
     res.json({
       success: true,

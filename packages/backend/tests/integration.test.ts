@@ -80,7 +80,7 @@ describe('Integration Tests', () => {
     // Step 4: Generate newsletter (test with recent articles)
     console.log('Generating newsletter...');
     const articlesToUse = recentResults.length > 0 ? recentResults.slice(0, 3) : articles.slice(0, 2);
-    const newsletter = await generateNewsletter('technology trends', articlesToUse);
+    const newsletter = await generateNewsletter(articlesToUse);
     
     expect(newsletter).toHaveProperty('subject');
     expect(newsletter).toHaveProperty('sections');
@@ -141,7 +141,7 @@ describe('Integration Tests', () => {
     expect(Array.isArray(recentResults)).toBe(true);
     
     // Should still generate a fallback newsletter
-    const newsletter = await generateNewsletter('test query', []);
+    const newsletter = await generateNewsletter([]);
     expect(newsletter).toHaveProperty('subject');
     expect(newsletter).toHaveProperty('sections');
   });
