@@ -273,24 +273,41 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
   try {
     const systemPrompt = createSystemPrompt();
     const userMessage = createUserMessage(articles);
+    let lastResponse: string | undefined;
+    let lastError: string | undefined;
     
     // Use retry logic for more reliable generation
     return await retryAIGeneration(
       async () => {
+        // Build messages array with original prompt and error feedback if retrying
+        const messages: Array<{ role: string; content: string }> = [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userMessage
+          }
+        ];
+
+        // If this is a retry attempt, include the previous error and response for context
+        if (lastResponse && lastError) {
+          messages.push({
+            role: 'assistant',
+            content: lastResponse
+          });
+          messages.push({
+            role: 'user',
+            content: `The previous response had an error: ${lastError}. Please fix the issue and provide a valid JSON response following the exact schema requirements. Ensure all content blocks have at least one hyperlink, and the featured image URL is valid and from one of the provided articles.`
+          });
+        }
+
         const response = await axios.post(
           OPENROUTER_API_URL,
           {
             model: MODEL,
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt
-              },
-              {
-                role: 'user',
-                content: userMessage
-              }
-            ],
+            messages,
             temperature: 0.3,
             max_tokens: 4000,
             response_format: {
@@ -474,6 +491,7 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
 
         const content = response.data.choices[0].message.content;
         console.log('Raw LLM Response:', content);
+        lastResponse = content;
         
         const parseResult = parseJsonWithFallback<LLMNewsletterResponse>(content);
         console.log('Parse Result:', { success: parseResult.success, error: parseResult.error });
@@ -504,25 +522,36 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
           const validationResult = validateNewsletter(newsletter);
           console.log('Validation Result:', validationResult);
           if (!validationResult) {
-            console.log('Validation failed - checking details:');
+            const errorDetails: string[] = [];
+            
+            // Check hyperlinks validation
             newsletter.sections.forEach((section, index) => {
-              console.log(`Section ${index} (${section.heading}):`);
               section.contentBlocks.forEach((block, blockIndex) => {
-                console.log(`  Content Block ${blockIndex} (${block.type}):`, {
-                  hyperlinksCount: block.hyperlinks?.length || 0,
-                  hyperlinks: block.hyperlinks
-                });
+                if (!block.hyperlinks || block.hyperlinks.length === 0) {
+                  errorDetails.push(`Section ${index} "${section.heading}" - Content Block ${blockIndex} missing hyperlinks`);
+                }
               });
             });
-            console.log('Featured Image:', newsletter.featuredImage);
+            
+            // Check featured image validation
+            if (!newsletter.featuredImage?.url) {
+              errorDetails.push('Missing or invalid featured image URL');
+            }
+            
+            const errorMsg = `Newsletter validation failed: ${errorDetails.join('; ')}`;
+            lastError = errorMsg;
+            console.log('Validation failed - details:', errorDetails);
+            throw new Error(errorMsg);
           }
           
           return newsletter;
         } else {
+          const errorMsg = `JSON parsing failed: ${parseResult.error}. Content preview: ${content.substring(0, 200)}`;
+          lastError = errorMsg;
           console.warn('Failed to parse AI response as JSON:', parseResult.error);
           console.warn('Original content length:', content.length);
           console.warn('First 500 chars:', content.substring(0, 500));
-          throw new Error(`JSON parsing failed: ${parseResult.error}. Content preview: ${content.substring(0, 200)}`);
+          throw new Error(errorMsg);
         }
       },
       validateNewsletter,
@@ -530,7 +559,7 @@ export async function generateNewsletter(articles: Article[]): Promise<Generated
         maxAttempts: 3,
         delayMs: 2000,
         onRetry: (error, attempt) => {
-          console.warn(`Newsletter generation attempt ${attempt} failed:`, error.message);
+          console.warn(`Newsletter generation attempt ${attempt} failed, retrying with error feedback...`, error.message);
           console.log(`Retrying in a moment...`);
         }
       }

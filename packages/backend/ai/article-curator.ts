@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Article } from '../common/database/postgres';
+import { retryAIGeneration } from '../utils/retry';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -103,12 +104,13 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
     // Removed automatic return of all articles
 
     const prompt = createCurationPrompt(articles);
+    let lastResponse: string | undefined;
+    let lastError: string | undefined;
     
-    const response = await axios.post(
-      OPENROUTER_API_URL,
-      {
-        model: CURATION_MODEL,
-        messages: [
+    const curationResult = await retryAIGeneration(
+      async () => {
+        // Build messages array with original prompt and error feedback if retrying
+        const messages: Array<{ role: string; content: string }> = [
           {
             role: 'system',
             content: prompt
@@ -117,60 +119,118 @@ export async function curateArticles(userQuery: string, articles: Article[]): Pr
             role: 'user',
             content: userQuery
           }
-        ],
-        temperature: 0.3,
-        max_tokens: 65000,
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'curation_response',
-            strict: true,
-            schema: {
-              type: 'object',
-              properties: {
-                hasRelevantArticles: {
-                  type: 'boolean',
-                  description: 'Whether any articles are relevant enough for the user\'s query'
-                },
-                reasoning: {
-                  type: 'string',
-                  description: 'If true: explanation of why these articles were selected. If false: explanation of why no articles matched the query'
-                },
-                articleIds: {
-                  type: 'array',
-                  items: {
-                    type: 'number'
+        ];
+
+        // If this is a retry attempt, include the previous error and response for context
+        if (lastResponse && lastError) {
+          messages.push({
+            role: 'assistant',
+            content: lastResponse
+          });
+          messages.push({
+            role: 'user',
+            content: `The previous response had an error: ${lastError}. Please fix the issue and provide a valid JSON response following the exact schema requirements. Remember to return ONLY valid JSON with the required fields: hasRelevantArticles (boolean), reasoning (string), and articleIds (array of numbers).`
+          });
+        }
+
+        const response = await axios.post(
+          OPENROUTER_API_URL,
+          {
+            model: CURATION_MODEL,
+            messages,
+            temperature: 0.3,
+            max_tokens: 65000,
+            response_format: {
+              type: 'json_schema',
+              json_schema: {
+                name: 'curation_response',
+                strict: true,
+                schema: {
+                  type: 'object',
+                  properties: {
+                    hasRelevantArticles: {
+                      type: 'boolean',
+                      description: 'Whether any articles are relevant enough for the user\'s query'
+                    },
+                    reasoning: {
+                      type: 'string',
+                      description: 'If true: explanation of why these articles were selected. If false: explanation of why no articles matched the query'
+                    },
+                    articleIds: {
+                      type: 'array',
+                      items: {
+                        type: 'number'
+                      },
+                      description: 'Array of selected article IDs (empty array if hasRelevantArticles is false)'
+                    }
                   },
-                  description: 'Array of selected article IDs (empty array if hasRelevantArticles is false)'
+                  required: ['hasRelevantArticles', 'reasoning', 'articleIds'],
+                  additionalProperties: false
                 }
-              },
-              required: ['hasRelevantArticles', 'reasoning', 'articleIds'],
-              additionalProperties: false
+              }
+            }
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://hubspot-newsletter.railway.app',
+              'X-Title': 'HubSpot Newsletter Bot'
             }
           }
+        );
+
+        const content = response.data.choices[0].message.content;
+        console.log('Raw AI response:', content);
+        lastResponse = content;
+        
+        let result: CurationResult;
+        try {
+          result = JSON.parse(content);
+        } catch (parseError) {
+          const errorMsg = `Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`;
+          lastError = errorMsg;
+          console.error('Failed to parse AI response as JSON. Raw content:', content);
+          console.error('Parse error:', parseError);
+          throw new Error(errorMsg);
         }
+        
+        // Additional validation
+        if (!result.hasOwnProperty('hasRelevantArticles') || 
+            !result.hasOwnProperty('reasoning') || 
+            !result.hasOwnProperty('articleIds')) {
+          const errorMsg = 'Response missing required fields: hasRelevantArticles, reasoning, or articleIds';
+          lastError = errorMsg;
+          throw new Error(errorMsg);
+        }
+
+        // Validate article IDs exist in our available set
+        const availableIds = articles.map(article => article.id!).filter(id => id !== undefined);
+        const invalidIds = result.articleIds.filter(id => !availableIds.includes(id));
+        if (invalidIds.length > 0) {
+          const errorMsg = `Invalid article IDs returned: ${invalidIds.join(', ')}. Available IDs: ${availableIds.join(', ')}`;
+          lastError = errorMsg;
+          throw new Error(errorMsg);
+        }
+        
+        return result;
+      },
+      (result: CurationResult) => {
+        // Validate the curation result structure
+        return typeof result === 'object' &&
+               typeof result.hasRelevantArticles === 'boolean' &&
+               typeof result.reasoning === 'string' &&
+               Array.isArray(result.articleIds) &&
+               result.articleIds.every(id => typeof id === 'number');
       },
       {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://hubspot-newsletter.railway.app',
-          'X-Title': 'HubSpot Newsletter Bot'
+        maxAttempts: 3,
+        delayMs: 2000,
+        onRetry: (error, attempt) => {
+          console.log(`Article curation attempt ${attempt} failed, retrying with error feedback...`, error.message);
         }
       }
     );
-
-    const content = response.data.choices[0].message.content;
-    console.log('Raw AI response:', content);
-    
-    let curationResult: CurationResult;
-    try {
-      curationResult = JSON.parse(content);
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON. Raw content:', content);
-      console.error('Parse error:', parseError);
-      throw new Error(`Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
-    }
     
     console.log(`AI Curation: hasRelevantArticles=${curationResult.hasRelevantArticles}, reasoning: ${curationResult.reasoning}`);
     
