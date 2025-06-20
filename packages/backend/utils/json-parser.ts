@@ -16,7 +16,31 @@ export function parseJsonWithFallback<T = any>(text: string): ParseResult<T> {
 
   const trimmed = text.trim();
   
-  // Try direct JSON parsing first
+  // Try extracting first JSON object FIRST to handle multiple objects
+  const extracted = extractFirstJsonObject(trimmed);
+  if (extracted) {
+    try {
+      const parsed = JSON.parse(extracted);
+      return {
+        success: true,
+        data: parsed
+      };
+    } catch (extractError) {
+      // Continue to other fallback methods with the extracted object
+      const cleaned = cleanJsonString(extracted);
+      try {
+        const parsed = JSON.parse(cleaned);
+        return {
+          success: true,
+          data: parsed
+        };
+      } catch (cleanError) {
+        // Continue to original methods
+      }
+    }
+  }
+
+  // Try direct JSON parsing 
   try {
     const parsed = JSON.parse(trimmed);
     return {
@@ -41,7 +65,7 @@ export function parseJsonWithFallback<T = any>(text: string): ParseResult<T> {
     }
   }
 
-  // Try cleaning and parsing
+  // Try cleaning and parsing the full text
   const cleaned = cleanJsonString(trimmed);
   if (cleaned !== trimmed) {
     try {
@@ -51,20 +75,6 @@ export function parseJsonWithFallback<T = any>(text: string): ParseResult<T> {
         data: parsed
       };
     } catch (cleanError) {
-      // Continue to next fallback
-    }
-  }
-
-  // Try extracting first JSON-like object from text
-  const extracted = extractFirstJsonObject(trimmed);
-  if (extracted) {
-    try {
-      const parsed = JSON.parse(extracted);
-      return {
-        success: true,
-        data: parsed
-      };
-    } catch (extractError) {
       // Final fallback failed
     }
   }
@@ -126,37 +136,53 @@ function extractFirstJsonObject(text: string): string | null {
   let inString = false;
   let escapeNext = false;
 
+  // First, try to find the start of a JSON object more reliably
+  const possibleStarts = [];
   for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
+    if (text[i] === '{') {
+      possibleStarts.push(i);
     }
+  }
 
-    if (char === '\\') {
-      escapeNext = true;
-      continue;
-    }
+  // Try each possible start position
+  for (const startPos of possibleStarts) {
+    braceCount = 0;
+    inString = false;
+    escapeNext = false;
 
-    if (char === '"' && !escapeNext) {
-      inString = !inString;
-      continue;
-    }
+    for (let i = startPos; i < text.length; i++) {
+      const char = text[i];
 
-    if (inString) {
-      continue;
-    }
-
-    if (char === '{') {
-      if (start === -1) {
-        start = i;
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
       }
-      braceCount++;
-    } else if (char === '}') {
-      braceCount--;
-      if (braceCount === 0 && start !== -1) {
-        return text.substring(start, i + 1);
+
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) {
+        continue;
+      }
+
+      if (char === '{') {
+        braceCount++;
+      } else if (char === '}') {
+        braceCount--;
+        if (braceCount === 0) {
+          const candidate = text.substring(startPos, i + 1);
+          // Basic validation that this looks like a valid JSON structure
+          if (candidate.includes('"') && candidate.length > 10) {
+            return candidate;
+          }
+        }
       }
     }
   }
